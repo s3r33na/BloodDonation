@@ -1,0 +1,270 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 transition-colors duration-300">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <a routerLink="/admin" class="inline-flex items-center gap-1 text-slate-500 hover:text-brand-red text-sm font-semibold transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+          </svg>
+          {{ lang.currentLang() === 'en' ? 'Back to Operations' : 'العودة لمركز الإدارة' }}
+        </a>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight mt-2">
+          {{ lang.currentLang() === 'en' ? 'Manage Donation Feeds' : 'إدارة منشورات حملات التبرع' }}
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">
+          {{ lang.currentLang() === 'en' ? 'Configure and release donation drives and emergency donor calls.' : 'إعداد ونشر حملات التبرع بالدم وطلبات التبرع العاجلة للمستشفيات.' }}
+        </p>
+      </div>
+      
+      <button (click)="openCreateForm()"
+        class="px-5 py-2.5 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl text-sm transition-all shadow-md">
+        {{ lang.currentLang() === 'en' ? 'Create Post' : 'إنشاء منشور جديد' }}
+      </button>
+    </div>
+
+    @if (successMsg()) {
+      <div class="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+        {{ successMsg() }}
+      </div>
+    }
+
+    <!-- Active Posts Lists -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-extrabold text-slate-800">{{ lang.currentLang() === 'en' ? 'Live Feed Catalog' : 'قائمة منشورات التغذية النشطة' }}</h2>
+        <span class="text-xs font-semibold text-slate-400">{{ posts().length }} {{ lang.currentLang() === 'en' ? 'Active Posts' : 'منشورات نشطة' }}</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-start border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase">
+              <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Type' : 'النوع' }}</th>
+              <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Title' : 'العنوان' }}</th>
+              <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Location' : 'الموقع' }}</th>
+              <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Info/Vitals' : 'التفاصيل والسعة' }}</th>
+              <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Status' : 'الحالة' }}</th>
+              <th class="pb-3 text-end">{{ lang.currentLang() === 'en' ? 'Actions' : 'إجراءات' }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            @for (post of posts(); track post.id) {
+              <tr>
+                <td class="py-4 text-start">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase"
+                    [class.bg-blue-100]="post.type === 'Event'" [class.text-blue-700]="post.type === 'Event'"
+                    [class.bg-red-100]="post.type === 'Emergency'" [class.text-red-700]="post.type === 'Emergency'">
+                    {{ post.type === 'Event' ? (lang.currentLang() === 'en' ? 'Event' : 'فعالية') : (lang.currentLang() === 'en' ? 'Emergency' : 'طوارئ') }}
+                  </span>
+                </td>
+                <td class="py-4 font-bold text-start">{{ post.title }}</td>
+                <td class="py-4 text-xs text-start">{{ post.location }}</td>
+                <td class="py-4 text-xs text-start">
+                  @if (post.type === 'Emergency') {
+                    <span>{{ lang.t('bloodGroup') }}: <strong class="text-brand-red">{{ post.bloodType }}</strong> | {{ lang.currentLang() === 'en' ? 'Donors needed:' : 'المطلوب:' }} {{ post.donorsNeeded }}</span>
+                  } @else {
+                    <span>{{ post.startDateTime | date:'yyyy-MM-dd HH:mm' }} {{ lang.currentLang() === 'en' ? 'to' : 'إلى' }} {{ post.endDateTime | date:'yyyy-MM-dd HH:mm' }}</span>
+                  }
+                </td>
+                <td class="py-4 text-start">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold"
+                    [class.bg-green-50]="post.status === 'Active'" [class.text-green-700]="post.status === 'Active'"
+                    [class.bg-slate-100]="post.status !== 'Active'" [class.text-slate-600]="post.status !== 'Active'">
+                    {{ post.status === 'Active' ? (lang.currentLang() === 'en' ? 'Active' : 'نشط') : post.status }}
+                  </span>
+                </td>
+                <td class="py-4 text-end">
+                  <div class="flex justify-end gap-1.5">
+                    <button (click)="openEditForm(post)"
+                      class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all">
+                      {{ lang.currentLang() === 'en' ? 'Edit' : 'تعديل' }}
+                    </button>
+                    @if (post.status === 'Active') {
+                      <button (click)="markComplete(post.id)"
+                        class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition-all">
+                        {{ lang.currentLang() === 'en' ? 'Complete' : 'اكتمل' }}
+                      </button>
+                      <button (click)="archivePost(post.id)"
+                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-bold transition-all">
+                        {{ lang.currentLang() === 'en' ? 'Archive' : 'أرشفة' }}
+                      </button>
+                    }
+                    <button (click)="deletePost(post.id)"
+                      class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-all">
+                      {{ lang.currentLang() === 'en' ? 'Delete' : 'حذف' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="py-10 text-center text-slate-400">
+                  {{ lang.currentLang() === 'en' ? 'No posts in live feeds. Click Create Post to start.' : 'لا توجد منشورات حالياً في التغذية. انقر على إنشاء منشور للبدء.' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Create/Edit Drawer Modal -->
+    @if (showForm()) {
+      <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto text-start">
+          <button (click)="closeForm()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-6">
+            {{ isEdit() 
+              ? (lang.currentLang() === 'en' ? 'Modify Post Details' : 'تعديل تفاصيل المنشور') 
+              : (lang.currentLang() === 'en' ? 'Create Feed Release' : 'إنشاء ونشر إعلان جديد') }}
+          </h2>
+
+          <form (submit)="savePost()" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  {{ lang.currentLang() === 'en' ? 'Post Type' : 'نوع المنشور' }}
+                </label>
+                <select [(ngModel)]="formType" name="formType" required [disabled]="isEdit()"
+                  class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm">
+                  <option value="Event">{{ lang.currentLang() === 'en' ? 'Donation Event' : 'حملة تبرع بالدم' }}</option>
+                  <option value="Emergency">{{ lang.currentLang() === 'en' ? 'Emergency Call' : 'نداء طارئ عاجل' }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  {{ lang.currentLang() === 'en' ? 'Post Status' : 'حالة المنشور' }}
+                </label>
+                <select [(ngModel)]="formStatus" name="formStatus" required
+                  class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm">
+                  <option value="Active">{{ lang.currentLang() === 'en' ? 'Active' : 'نشط' }}</option>
+                  <option value="Completed">{{ lang.currentLang() === 'en' ? 'Completed' : 'مكتمل' }}</option>
+                  <option value="Archived">{{ lang.currentLang() === 'en' ? 'Archived' : 'مؤرشف' }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Title' : 'العنوان الرئيسي' }}
+              </label>
+              <input type="text" [(ngModel)]="formTitle" name="formTitle" required
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm"
+                placeholder="e.g. Khalda Blood Drive, Urgent A- Needed" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Description' : 'نص المنشور / تفاصيل إضافية' }}
+              </label>
+              <textarea [(ngModel)]="formDesc" name="formDesc" rows="3" required
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm"
+                placeholder="Detailed guidelines, donor details, context..."></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Location / Venue' : 'المكان / المركز الطبي' }}
+              </label>
+              <input type="text" [(ngModel)]="formLocation" name="formLocation" required
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm"
+                placeholder="e.g. Specialty Hospital, Al-Hussein Park" />
+            </div>
+
+            <!-- Event Specifics -->
+            @if (formType === 'Event') {
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    {{ lang.currentLang() === 'en' ? 'Start Date & Time' : 'تاريخ ووقت البدء' }}
+                  </label>
+                  <input type="datetime-local" [(ngModel)]="formStartDateTime" name="formStartDateTime" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    {{ lang.currentLang() === 'en' ? 'End Date & Time' : 'تاريخ ووقت الانتهاء' }}
+                  </label>
+                  <input type="datetime-local" [(ngModel)]="formEndDateTime" name="formEndDateTime" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm" />
+                </div>
+              </div>
+            }
+
+            <!-- Emergency Specifics -->
+            @if (formType === 'Emergency') {
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('bloodGroup') }}</label>
+                  <select [(ngModel)]="formBloodType" name="formBloodType" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm">
+                    <option value="Any">Any Type</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    {{ lang.currentLang() === 'en' ? 'Urgency Level' : 'درجة الخطورة / الاستعجال' }}
+                  </label>
+                  <select [(ngModel)]="formUrgency" name="formUrgency" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Emergency">Emergency (Immediate)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    {{ lang.currentLang() === 'en' ? 'Donors Needed Count' : 'عدد المتبرعين المطلوبين' }}
+                  </label>
+                  <input type="number" [(ngModel)]="formDonorsNeeded" name="formDonorsNeeded" required min="1"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    {{ lang.currentLang() === 'en' ? 'Contact Phone' : 'هاتف التواصل المستعجل' }}
+                  </label>
+                  <input type="text" [(ngModel)]="formContactInfo" name="formContactInfo" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm"
+                    placeholder="e.g. 079XXXXXXX" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  {{ lang.currentLang() === 'en' ? 'Expiration Date & Time' : 'تاريخ ووقت انتهاء الإعلان' }}
+                </label>
+                <input type="datetime-local" [(ngModel)]="formExpiryTime" name="formExpiryTime" required
+                  class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm" />
+              </div>
+            }
+
+            <button type="submit"
+              class="w-full mt-4 py-3 px-4 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl shadow-md transition-all">
+              {{ isEdit() 
+                ? (lang.currentLang() === 'en' ? 'Save Changes' : 'حفظ التعديلات') 
+                : (lang.currentLang() === 'en' ? 'Publish Release' : 'نشر الإعلان فوراً') }}
+            </button>
+          </form>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,228 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 transition-colors duration-300">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm mb-8 transition-colors duration-300">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 class="text-3xl font-black text-slate-800 tracking-tight">
+            {{ lang.currentLang() === 'en' ? 'Welcome,' : 'مرحباً بك،' }} {{ user()?.fullName }}
+          </h1>
+          <p class="text-sm text-slate-500 mt-1">
+            {{ lang.currentLang() === 'en' ? 'Explore and manage your blood donation details, screening history, and active bookings.' : 'استكشف وتابع مواعيد تبرعك بالدم، وسجل الفحوصات الطبية، والبطاقات الصحية الخاصة بك.' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex items-start gap-4 transition-colors duration-300">
+        <div class="p-3.5 rounded-2xl" [class]="getEligibilityBadgeClass()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">{{ lang.t('eligibilityStatus') }}</span>
+          <strong class="text-lg text-slate-800 font-extrabold mt-0.5 block leading-tight">
+            @if (user()?.eligibilityStatus === 'Eligible') {
+              {{ lang.t('eligible') }}
+            } @else if (user()?.eligibilityStatus === 'PendingReview') {
+              {{ lang.t('pendingReview') }}
+            } @else {
+              {{ lang.t('ineligible') }}
+            }
+          </strong>
+          <p class="text-xs text-slate-500 mt-1 leading-normal">
+            {{ lang.currentLang() === 'en' ? 'Based on your latest digital screening response.' : 'بناءً على إجابات آخر فحص طبي رقمي قمت بتقديمه.' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex items-start gap-4 transition-colors duration-300">
+        <div class="p-3.5 bg-red-50 text-brand-red rounded-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">{{ lang.t('bloodGroup') }}</span>
+          <strong class="text-lg text-slate-800 font-extrabold mt-0.5 block leading-tight">
+            {{ getBloodGroupDisplay() }}
+          </strong>
+          <p class="text-xs text-slate-500 mt-1 leading-normal">
+            {{ lang.currentLang() === 'en' ? 'Rh Factor and Group checked on record.' : 'فصيلة الدم والعامل الرايزيسي المسجل في النظام.' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex items-start gap-4 transition-colors duration-300">
+        <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">{{ lang.t('completedDonationsText') }}</span>
+          <strong class="text-lg text-slate-800 font-extrabold mt-0.5 block leading-tight">{{ completedDonationsCount() }}</strong>
+          <p class="text-xs text-slate-500 mt-1 leading-normal">{{ lang.t('completedDonationsDesc') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Upcoming Appointments List -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-5">{{ lang.t('upcomingBookings') }}</h2>
+          
+          @if (appointmentsLoading()) {
+            <div class="flex items-center justify-center py-10">
+              <svg class="animate-spin h-6 w-6 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          } @else if (upcomingAppointments().length === 0) {
+            <div class="py-8 text-center border border-dashed border-slate-200 rounded-2xl">
+              <p class="text-sm text-slate-500">{{ lang.t('noActiveBookings') }}</p>
+              <a routerLink="/feed" class="text-xs text-brand-red font-bold hover:underline block mt-2">{{ lang.t('goBook') }}</a>
+            </div>
+          } @else {
+            <div class="space-y-4">
+              @for (appt of upcomingAppointments(); track appt.id) {
+                <div class="p-5 border border-slate-100 bg-slate-50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-100 text-blue-700">
+                        {{ appt.status === 'Booked' ? lang.currentLang() === 'en' ? 'Booked' : 'محجوز' : appt.status }}
+                      </span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-base">{{ appt.eventName }}</h4>
+                    
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 mt-2">
+                      <span class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                        </svg>
+                        {{ appt.eventLocation }}
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        {{ appt.appointmentDateTime | date:'yyyy-MM-dd HH:mm' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <button (click)="selectAppointment(appt)"
+                      class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                      {{ lang.currentLang() === 'en' ? 'View QR Ticket' : 'عرض تذكرة QR' }}
+                    </button>
+                    <button (click)="cancelAppointment(appt.id)"
+                      class="px-4 py-2 border border-red-200 text-brand-red hover:bg-red-50 rounded-xl text-xs font-bold transition-all shadow-sm">
+                      {{ lang.t('cancel') }}
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- History Log -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-5">
+            {{ lang.currentLang() === 'en' ? 'My Donation History' : 'سجل التبرع الشخصي' }}
+          </h2>
+          
+          @if (historyLoading()) {
+            <div class="flex items-center justify-center py-10">
+              <svg class="animate-spin h-6 w-6 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          } @else if (donationHistory().length === 0) {
+            <p class="text-xs text-slate-400 text-center py-6">
+              {{ lang.currentLang() === 'en' ? 'No completed donations recorded yet.' : 'لا توجد تبرعات مكتملة مسجلة في حسابك بعد.' }}
+            </p>
+          } @else {
+            <div class="space-y-3">
+              @for (hist of donationHistory(); track hist.id) {
+                <div class="p-4 border border-slate-100 bg-slate-50/50 rounded-xl flex items-center justify-between">
+                  <div>
+                    <strong class="text-slate-800 text-sm">
+                      {{ lang.currentLang() === 'en' ? 'Donated' : 'تبرع بـ' }} {{ hist.bloodType }} {{ lang.currentLang() === 'en' ? 'at' : 'في' }} {{ hist.location }}
+                    </strong>
+                    <span class="text-[10px] text-slate-400 block mt-1">{{ hist.checkedInAt | date:'yyyy-MM-dd HH:mm' }}</span>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-black uppercase">
+                    {{ lang.currentLang() === 'en' ? 'Completed' : 'مكتمل' }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right Column: Selected QR Code details -->
+      <div class="lg:col-span-1">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm sticky top-24 transition-colors duration-300 text-center">
+          <h3 class="font-extrabold text-slate-800 text-lg mb-4">
+            {{ lang.currentLang() === 'en' ? 'Donation Verification Pass' : 'بطاقة التحقق من موعد التبرع' }}
+          </h3>
+          
+          @if (activeAppt()) {
+            <div class="flex flex-col items-center">
+              <p class="text-xs text-slate-500 mb-6 leading-relaxed">{{ lang.t('ticketInfo') }}</p>
+              
+              <!-- QR Code Card Wrapper -->
+              <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl inline-block mb-4">
+                <!-- Direct Google QR Code API Integration for bulletproof generation -->
+                <img [src]="'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + activeAppt()?.qrCodeToken" 
+                  alt="QR Code" class="w-48 h-48 mx-auto rounded-lg shadow-sm" />
+              </div>
+
+              <div class="text-xs font-mono text-slate-400 mt-2 bg-slate-50 border border-slate-100 w-full p-2.5 rounded-xl">
+                <span class="block uppercase tracking-wider text-[9px] font-bold text-slate-400 mb-0.5">{{ lang.currentLang() === 'en' ? 'Verification Token' : 'رمز التحقق المعتمد' }}</span>
+                <span class="text-slate-700 font-extrabold">{{ activeAppt()?.qrCodeToken }}</span>
+              </div>
+
+              <div class="mt-4 text-xs text-slate-500 text-start w-full border-t border-slate-100 pt-4 space-y-2">
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Event' : 'الحدث' }}</span>
+                  <strong class="text-slate-800 font-bold block">{{ activeAppt()?.eventName }}</strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Venue Location' : 'موقع المركز' }}</span>
+                  <strong class="text-slate-800 font-bold block">{{ activeAppt()?.eventLocation }}</strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Confirmed Time Slot' : 'وقت الموعد المؤكد' }}</span>
+                  <strong class="text-brand-red font-extrabold block">{{ activeAppt()?.appointmentDateTime | date:'yyyy-MM-dd HH:mm' }}</strong>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="py-20 text-slate-350">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto mb-4 text-slate-300">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 14v2m-3-3H9M13.5 17h.008v.008H13.5V17Zm0 2.25h.008v.008H13.5V19.25ZM16.5 17h.008v.008H16.5V17Zm0 2.25h.008v.008H16.5V19.25ZM12.5 15.75h.008v.008H12.5v-.008Zm0 2.25h.008v.008H12.5V18ZM13.5 15.75h.008v.008H13.5v-.008Zm0 2.25h.008v.008H13.5V18ZM14.75 17h.008v.008H14.75V17Zm0 2.25h.008v.008H14.75V19.25ZM18 17h.008v.008H18V17Zm0 2.25h.008v.008H18V19.25ZM18.75 15.75h.008v.008H18.75v-.008Zm0 2.25h.008v.008H18.75V18Z" />
+              </svg>
+              <p class="text-xs text-slate-400 max-w-[200px] mx-auto leading-relaxed">
+                {{ lang.currentLang() === 'en' ? 'Click "View QR Ticket" on an upcoming appointment card to display your verification pass here.' : 'انقر على "عرض تذكرة QR" في بطاقات المواعيد القادمة لعرض بطاقة التحقق الخاصة بك هنا.' }}
+              </p>
+            </div>
+          }
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

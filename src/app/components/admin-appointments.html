@@ -1,0 +1,142 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 transition-colors duration-300">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <a routerLink="/admin" class="inline-flex items-center gap-1 text-slate-500 hover:text-brand-red text-sm font-semibold transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+        </svg>
+        {{ lang.currentLang() === 'en' ? 'Back to Operations' : 'العودة لمركز الإدارة' }}
+      </a>
+      <h1 class="text-3xl font-black text-slate-800 tracking-tight mt-2">
+        {{ lang.currentLang() === 'en' ? 'Manage Bookings' : 'إدارة المواعيد المحجوزة' }}
+      </h1>
+      <p class="text-sm text-slate-500 mt-1">
+        {{ lang.currentLang() === 'en' ? 'Verify scheduling, approve or cancel bookings, and trigger dispatch notifications.' : 'متابعة المواعيد وجدولتها، والتحقق من صحتها، أو إلغاء الحجوزات وإعادة إرسال رمز التذكرة.' }}
+      </p>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm mb-8 transition-colors duration-300">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div class="relative">
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="loadAppointments()"
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all"
+            [placeholder]="lang.currentLang() === 'en' ? 'Donor name, National ID, Event...' : 'اسم المتبرع، الرقم الوطني، الفعالية...'" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
+          </svg>
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <select [(ngModel)]="statusFilter" (change)="loadAppointments()"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all">
+            <option value="">{{ lang.currentLang() === 'en' ? 'All Booking States' : 'جميع حالات المواعيد' }}</option>
+            <option value="Booked">{{ lang.currentLang() === 'en' ? 'Booked' : 'محجوز' }}</option>
+            <option value="CheckedIn">{{ lang.currentLang() === 'en' ? 'Checked In' : 'تم الحضور والتحقق' }}</option>
+            <option value="Completed">{{ lang.currentLang() === 'en' ? 'Completed' : 'تبرع ناجح مكتمل' }}</option>
+            <option value="Canceled">{{ lang.currentLang() === 'en' ? 'Canceled' : 'ملغي' }}</option>
+            <option value="NoShow">{{ lang.currentLang() === 'en' ? 'No Show' : 'لم يحضر' }}</option>
+          </select>
+        </div>
+
+        <div></div>
+
+        <button (click)="resetFilters()"
+          class="w-full py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-bold transition-all">
+          {{ lang.t('resetFilters') }}
+        </button>
+      </div>
+    </div>
+
+    @if (successMsg()) {
+      <div class="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+        {{ successMsg() }}
+      </div>
+    }
+
+    <!-- Bookings List Table -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+      @if (loading()) {
+        <div class="flex items-center justify-center py-10">
+          <svg class="animate-spin h-6 w-6 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-start border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase">
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Appointment Date' : 'تاريخ ووقت الموعد' }}</th>
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Donor Name' : 'اسم المتبرع' }}</th>
+                <th class="pb-3 text-start">{{ lang.t('bloodGroup') }}</th>
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Event Name' : 'اسم الفعالية' }}</th>
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Booking Status' : 'حالة الحجز' }}</th>
+                <th class="pb-3 text-end">{{ lang.currentLang() === 'en' ? 'Actions' : 'إجراءات' }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              @for (appt of appointments(); track appt.id) {
+                <tr>
+                  <td class="py-4 text-xs font-bold text-start">{{ appt.appointmentDateTime | date:'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="py-4 text-start">
+                    <div class="font-bold text-slate-800">{{ appt.donorName }}</div>
+                    <span class="text-[10px] text-slate-450 block font-mono">
+                      {{ lang.currentLang() === 'en' ? 'National ID:' : 'الرقم الوطني:' }} {{ appt.donorNationalId }} | {{ lang.currentLang() === 'en' ? 'Tel:' : 'الهاتف:' }} {{ appt.donorPhone }}
+                    </span>
+                  </td>
+                  <td class="py-4 text-start">
+                    <span class="px-2 py-0.5 rounded font-black text-brand-red bg-red-50 text-xs">{{ appt.donorBloodType }}</span>
+                  </td>
+                  <td class="py-4 text-xs max-w-[160px] truncate text-start" [title]="appt.eventName">{{ appt.eventName }}</td>
+                  <td class="py-4 text-start">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                      [class.bg-blue-100]="appt.status === 'Booked'" [class.text-blue-700]="appt.status === 'Booked'"
+                      [class.bg-emerald-100]="appt.status === 'CheckedIn' || appt.status === 'Completed'" [class.text-emerald-700]="appt.status === 'CheckedIn' || appt.status === 'Completed'"
+                      [class.bg-red-100]="appt.status === 'Canceled' || appt.status === 'NoShow'" [class.text-red-700]="appt.status === 'Canceled' || appt.status === 'NoShow'">
+                      @if (appt.status === 'Booked') {
+                        {{ lang.currentLang() === 'en' ? 'Booked' : 'محجوز' }}
+                      } @else if (appt.status === 'CheckedIn') {
+                        {{ lang.currentLang() === 'en' ? 'Checked In' : 'تم الحضور' }}
+                      } @else if (appt.status === 'Completed') {
+                        {{ lang.currentLang() === 'en' ? 'Completed' : 'مكتمل' }}
+                      } @else if (appt.status === 'Canceled') {
+                        {{ lang.currentLang() === 'en' ? 'Canceled' : 'ملغي' }}
+                      } @else {
+                        {{ lang.currentLang() === 'en' ? 'No Show' : 'لم يحضر' }}
+                      }
+                    </span>
+                  </td>
+                  <td class="py-4 text-end">
+                    <div class="flex justify-end gap-1.5">
+                      @if (appt.status === 'Booked') {
+                        <button (click)="cancelBooking(appt.id)"
+                          class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-all">
+                          {{ lang.currentLang() === 'en' ? 'Cancel' : 'إلغاء الموعد' }}
+                        </button>
+                      }
+                      <button (click)="resendDetails(appt.id)"
+                        class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all">
+                        {{ lang.currentLang() === 'en' ? 'Resend Info' : 'إعادة إرسال الرمز' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="py-10 text-center text-slate-400">
+                    {{ lang.currentLang() === 'en' ? 'No appointments recorded.' : 'لا توجد مواعيد مسجلة حالياً.' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

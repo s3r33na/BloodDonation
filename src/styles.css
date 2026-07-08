@@ -1,3 +1,87 @@
-/* You can add global styles to this file, and also import other style files */
-
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: 'Outfit', sans-serif;
+  
+  --color-brand-red: #D32F2F;
+  --color-brand-red-dark: #B71C1C;
+  --color-brand-red-light: #EF5350;
+  --color-charcoal: #212121;
+  --color-light-bg: #F9FAFB;
+  --color-dark-bg: #0B0F19;
+  --color-dark-card: #151F32;
+  --color-dark-border: #1E2E4A;
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-light-bg);
+  color: var(--color-charcoal);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body.dark-mode {
+  background-color: var(--color-dark-bg);
+  color: #F1F5F9;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #1E293B;
+}
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Glassmorphism card */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+body.dark-mode .glass-panel {
+  background: rgba(21, 31, 50, 0.8);
+  border: 1px solid rgba(30, 46, 74, 0.5);
+}
+
+/* Custom animations */
+.glow-effect-red {
+  box-shadow: 0 0 15px rgba(211, 47, 47, 0.4);
+}
+.glow-effect-red:hover {
+  box-shadow: 0 0 25px rgba(211, 47, 47, 0.6);
+}
+
+/* Jordan Flag badge colors */
+.flag-green { background-color: #007A3D; }
+.flag-red { background-color: #CE1126; }
+.flag-black { background-color: #000000; }
+
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

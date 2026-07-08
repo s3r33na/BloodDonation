@@ -1,0 +1,379 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 transition-colors duration-300">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+      <div>
+        <a routerLink="/dashboard" class="inline-flex items-center gap-1 text-slate-500 hover:text-brand-red text-sm font-semibold transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+          </svg>
+          {{ lang.currentLang() === 'en' ? 'Back to Dashboard' : 'العودة للوحة التحكم' }}
+        </a>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight mt-2">{{ lang.t('screeningTitle') }}</h1>
+        <p class="text-sm text-slate-500 mt-1">{{ lang.t('screeningSubtitle') }}</p>
+      </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-6 transition-colors duration-300">
+      <div class="flex items-center justify-between relative">
+        <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-slate-100 -translate-y-1/2 z-0"></div>
+        <div class="absolute left-0 top-1/2 h-0.5 bg-brand-red -translate-y-1/2 z-0 transition-all duration-300" [style.width.%]="(step() - 1) * 33.3"></div>
+
+        <div class="z-10 flex flex-col items-center">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+            [class.bg-brand-red]="step() >= 1" [class.text-white]="step() >= 1"
+            [class.bg-slate-100]="step() < 1" [class.text-slate-500]="step() < 1">1</div>
+          <span class="text-[10px] md:text-xs font-bold uppercase tracking-wider mt-2" [class.text-brand-red]="step() >= 1" [class.text-slate-400]="step() < 1">
+            {{ lang.currentLang() === 'en' ? 'Personal' : 'البيانات الشخصية' }}
+          </span>
+        </div>
+
+        <div class="z-10 flex flex-col items-center">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+            [class.bg-brand-red]="step() >= 2" [class.text-white]="step() >= 2"
+            [class.bg-slate-100]="step() < 2" [class.text-slate-500]="step() < 2">2</div>
+          <span class="text-[10px] md:text-xs font-bold uppercase tracking-wider mt-2" [class.text-brand-red]="step() >= 2" [class.text-slate-400]="step() < 2">
+            {{ lang.currentLang() === 'en' ? 'Screening' : 'الاستبيان الطبي' }}
+          </span>
+        </div>
+
+        <div class="z-10 flex flex-col items-center">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+            [class.bg-brand-red]="step() >= 3" [class.text-white]="step() >= 3"
+            [class.bg-slate-100]="step() < 3" [class.text-slate-500]="step() < 3">3</div>
+          <span class="text-[10px] md:text-xs font-bold uppercase tracking-wider mt-2" [class.text-brand-red]="step() >= 3" [class.text-slate-400]="step() < 3">
+            {{ lang.currentLang() === 'en' ? 'Medical Details' : 'العلامات الحيوية' }}
+          </span>
+        </div>
+
+        <div class="z-10 flex flex-col items-center">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+            [class.bg-brand-red]="step() >= 4" [class.text-white]="step() >= 4"
+            [class.bg-slate-100]="step() < 4" [class.text-slate-500]="step() < 4">4</div>
+          <span class="text-[10px] md:text-xs font-bold uppercase tracking-wider mt-2" [class.text-brand-red]="step() >= 4" [class.text-slate-400]="step() < 4">
+            {{ lang.currentLang() === 'en' ? 'Review' : 'المراجعة والقرار' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Panel -->
+    <div #formCard class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm transition-all duration-300">
+      @if (errorMsg()) {
+        <div class="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 shrink-0 mt-0.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+          </svg>
+          <span>{{ errorMsg() }}</span>
+        </div>
+      }
+
+      <!-- STEP 1: Personal Info -->
+      @if (step() === 1) {
+        <div #stepContainer class="space-y-6">
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">
+            {{ lang.t('step') }} 1: {{ lang.currentLang() === 'en' ? 'Confirm Personal Information' : 'تأكيد البيانات الشخصية المتصلة بالهوية' }}
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{{ lang.t('fullName') }}</label>
+              <input type="text" [value]="user()?.fullName" readonly disabled
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{{ lang.t('nationalId') }}</label>
+              <input type="text" [value]="user()?.nationalId" readonly disabled
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{{ lang.t('dob') }}</label>
+              <input type="text" [value]="user()?.dateOfBirth" readonly disabled
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{{ lang.t('mobile') }}</label>
+              <input type="text" [value]="user()?.mobileNumber" readonly disabled
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+              {{ lang.currentLang() === 'en' ? 'Home Address / Location in Jordan' : 'عنوان السكن الحالي في الأردن' }} <span class="text-brand-red">*</span>
+            </label>
+            <input type="text" [(ngModel)]="address" required
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm"
+              [placeholder]="lang.currentLang() === 'en' ? 'e.g. Khalda, Amman, Building 12' : 'مثال: الجبيهة، عمان، عمارة 15'" />
+          </div>
+        </div>
+      }
+
+      <!-- STEP 2: Questionnaire -->
+      @if (step() === 2) {
+        <div #stepContainer class="space-y-6">
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ lang.t('step') }} 2: {{ lang.t('step2Title') }}</h2>
+          <p class="text-xs text-slate-400">
+            {{ lang.currentLang() === 'en' ? 'Please answer Yes or No to the following questions based on the last 6 months.' : 'يرجى الإجابة بنعم أو لا على الأسئلة التالية المتعلقة بفترة الـ 6 أشهر الماضية.' }}
+          </p>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl gap-4">
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-slate-700">{{ lang.t('qTattoo') }}</p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button type="button" (click)="qTattoo = true" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qTattoo === true" [class.text-white]="qTattoo === true" [class.border-brand-red]="qTattoo === true"
+                  [class.bg-white]="qTattoo !== true" [class.text-slate-600]="qTattoo !== true">{{ lang.t('yes') }}</button>
+                <button type="button" (click)="qTattoo = false" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qTattoo === false" [class.text-white]="qTattoo === false" [class.border-brand-red]="qTattoo === false"
+                  [class.bg-white]="qTattoo !== false" [class.text-slate-600]="qTattoo !== false">{{ lang.t('no') }}</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl gap-4">
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-slate-700">{{ lang.t('qMeds') }}</p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button type="button" (click)="qMeds = true" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qMeds === true" [class.text-white]="qMeds === true" [class.border-brand-red]="qMeds === true"
+                  [class.bg-white]="qMeds !== true" [class.text-slate-600]="qMeds !== true">{{ lang.t('yes') }}</button>
+                <button type="button" (click)="qMeds = false" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qMeds === false" [class.text-white]="qMeds === false" [class.border-brand-red]="qMeds === false"
+                  [class.bg-white]="qMeds !== false" [class.text-slate-600]="qMeds !== false">{{ lang.t('no') }}</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl gap-4">
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-slate-700">{{ lang.t('qSurgery') }}</p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button type="button" (click)="qSurgery = true" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qSurgery === true" [class.text-white]="qSurgery === true" [class.border-brand-red]="qSurgery === true"
+                  [class.bg-white]="qSurgery !== true" [class.text-slate-600]="qSurgery !== true">{{ lang.t('yes') }}</button>
+                <button type="button" (click)="qSurgery = false" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qSurgery === false" [class.text-white]="qSurgery === false" [class.border-brand-red]="qSurgery === false"
+                  [class.bg-white]="qSurgery !== false" [class.text-slate-600]="qSurgery !== false">{{ lang.t('no') }}</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl gap-4">
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-slate-700">{{ lang.t('qChronic') }}</p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button type="button" (click)="qChronic = true" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qChronic === true" [class.text-white]="qChronic === true" [class.border-brand-red]="qChronic === true"
+                  [class.bg-white]="qChronic !== true" [class.text-slate-600]="qChronic !== true">{{ lang.t('yes') }}</button>
+                <button type="button" (click)="qChronic = false" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  [class.bg-brand-red]="qChronic === false" [class.text-white]="qChronic === false" [class.border-brand-red]="qChronic === false"
+                  [class.bg-white]="qChronic !== false" [class.text-slate-600]="qChronic !== false">{{ lang.t('no') }}</button>
+              </div>
+            </div>
+
+            @if (user()?.gender === 'Female') {
+              <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl gap-4">
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-slate-700">{{ lang.t('qPreg') }}</p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                  <button type="button" (click)="qPreg = true" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                    [class.bg-brand-red]="qPreg === true" [class.text-white]="qPreg === true" [class.border-brand-red]="qPreg === true"
+                    [class.bg-white]="qPreg !== true" [class.text-slate-600]="qPreg !== true">{{ lang.t('yes') }}</button>
+                  <button type="button" (click)="qPreg = false" class="px-4 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                    [class.bg-brand-red]="qPreg === false" [class.text-white]="qPreg === false" [class.border-brand-red]="qPreg === false"
+                    [class.bg-white]="qPreg !== false" [class.text-slate-600]="qPreg !== false">{{ lang.t('no') }}</button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- STEP 3: Vitals & Medical Details -->
+      @if (step() === 3) {
+        <div #stepContainer class="space-y-6">
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ lang.t('step') }} 3: {{ lang.t('step3Title') }}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('bloodGroup') }} <span class="text-brand-red">*</span></label>
+              <select [(ngModel)]="bloodGroup" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="AB">AB</option>
+                <option value="O">O</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Rh Factor' : 'العامل الرايزيسي (Rh)' }} <span class="text-brand-red">*</span>
+              </label>
+              <select [(ngModel)]="rhFactor" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm">
+                <option value="+">+</option>
+                <option value="-">-</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('weight') }} <span class="text-brand-red">*</span></label>
+              <input type="number" [(ngModel)]="weight" required min="30"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm"
+                placeholder="e.g. 70" />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 p-3 bg-brand-red/5 border border-brand-red/20 rounded-2xl mb-4">
+            <input type="checkbox" [(ngModel)]="dontKnowVitals" id="dontKnowVitalsCheck" class="h-4.5 w-4.5 text-brand-red border-slate-300 rounded focus:ring-brand-red" />
+            <label for="dontKnowVitalsCheck" class="text-xs font-semibold text-slate-700 select-none cursor-pointer">
+              {{ lang.t('unknownCheck') }}
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.t('hemoglobin') }} @if (!dontKnowVitals) { <span class="text-brand-red">*</span> }
+              </label>
+              <input type="number" [(ngModel)]="hemoglobin" step="0.1" [disabled]="dontKnowVitals"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                [placeholder]="dontKnowVitals ? (lang.currentLang() === 'en' ? 'Checked at center' : 'يتم فحصها في المركز') : 'Normal: 12.5 - 18.0'" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.t('hematocrit') }} @if (!dontKnowVitals) { <span class="text-brand-red">*</span> }
+              </label>
+              <input type="number" [(ngModel)]="hematocrit" step="1" [disabled]="dontKnowVitals"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                [placeholder]="dontKnowVitals ? (lang.currentLang() === 'en' ? 'Checked at center' : 'يتم فحصها في المركز') : 'Normal: 35% - 54%'" />
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Medical Conditions (leave blank if none)' : 'الحالات والظروف الطبية (اتركها فارغة إن لم توجد)' }}
+              </label>
+              <input type="text" [(ngModel)]="medConditions"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm"
+                [placeholder]="lang.currentLang() === 'en' ? 'e.g. Mild Asthma, None' : 'مثال: ربو خفيف، لا يوجد'" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Recent Illness or Infections in last 14 days (leave blank if none)' : 'الأمراض أو العدوى خلال الـ 14 يوماً الماضية (اتركها فارغة إن لم توجد)' }}
+              </label>
+              <input type="text" [(ngModel)]="recentIllness"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm"
+                [placeholder]="lang.currentLang() === 'en' ? 'e.g. Flu, Cold' : 'مثال: إنفلونزا، زكام، حرارة'" />
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 4: Review -->
+      @if (step() === 4) {
+        <div #stepContainer class="space-y-6">
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ lang.t('step') }} 4: {{ lang.t('step4Title') }}</h2>
+          <div class="bg-slate-50 rounded-2xl p-6 space-y-4 text-sm text-slate-600">
+            <div class="grid grid-cols-2 gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <span class="text-xs text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Address' : 'العنوان' }}</span>
+                <strong>{{ address }}</strong>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Blood Group & Rh' : 'الفصيلة وعامل Rh' }}</span>
+                <strong class="text-brand-red">{{ bloodGroup }}{{ rhFactor }}</strong>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <span class="text-xs text-slate-400 block font-semibold uppercase">{{ lang.t('weight') }}</span>
+                <strong>{{ weight }} kg</strong>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block font-semibold uppercase">{{ lang.t('hemoglobin') }}</span>
+                <strong>@if (dontKnowVitals) { {{ lang.currentLang() === 'en' ? 'Unknown (Checked at Center)' : 'غير معروف (يتم فحصه بالمركز)' }} } @else { {{ hemoglobin }} g/dL }</strong>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block font-semibold uppercase">{{ lang.t('hematocrit') }}</span>
+                <strong>@if (dontKnowVitals) { {{ lang.currentLang() === 'en' ? 'Unknown (Checked at Center)' : 'غير معروف (يتم فحصه بالمركز)' }} } @else { {{ hematocrit }}% }</strong>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <span class="text-xs text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Flags & Answers' : 'المؤشرات الطبية المكتشفة' }}</span>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold" [class]="qTattoo ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">
+                  {{ lang.currentLang() === 'en' ? 'Tattoo/Piercing:' : 'وشم/ثقب:' }} {{ qTattoo ? lang.t('yes') : lang.t('no') }}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold" [class]="qMeds ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">
+                  {{ lang.currentLang() === 'en' ? 'Medications:' : 'أدوية:' }} {{ qMeds ? lang.t('yes') : lang.t('no') }}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold" [class]="qSurgery ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">
+                  {{ lang.currentLang() === 'en' ? 'Recent Surgery:' : 'جراحة مؤخراً:' }} {{ qSurgery ? lang.t('yes') : lang.t('no') }}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold" [class]="qChronic ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">
+                  {{ lang.currentLang() === 'en' ? 'Chronic Disease:' : 'مرض مزمن:' }} {{ qChronic ? lang.t('yes') : lang.t('no') }}
+                </span>
+                @if (user()?.gender === 'Female') {
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-semibold" [class]="qPreg ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">
+                    {{ lang.currentLang() === 'en' ? 'Pregnancy:' : 'حمل/رضاعة:' }} {{ qPreg ? lang.t('yes') : lang.t('no') }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="pt-4 flex items-start gap-3">
+              <input type="checkbox" [(ngModel)]="consented" id="consentCheck" required class="mt-1 h-4 w-4 rounded border-slate-300 text-brand-red focus:ring-brand-red" />
+              <label for="consentCheck" class="text-xs leading-normal select-none">
+                {{ lang.currentLang() === 'en' 
+                  ? 'I hereby certify that all information provided above is complete and truthful to the best of my knowledge. I understand that misrepresentation may lead to immediate disqualification and pose health risks to potential blood recipients.' 
+                  : 'أقر وأشهد بموجب هذا أن جميع المعلومات والبيانات الواردة أعلاه صحيحة وكاملة ودقيقة. وأدرك أن أي تضليل أو إخفاء لمعلومات طبية قد يعرضني للاستبعاد الفوري ويشكل خطراً جسيماً على سلامة متلقي الدم.' }}
+              </label>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Form Buttons -->
+      <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+        @if (step() > 1) {
+          <button type="button" (click)="onPrev()" [disabled]="loading()"
+            class="px-5 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-600 font-bold transition-all text-sm disabled:opacity-50">
+            {{ lang.t('back') }}
+          </button>
+        } @else {
+          <div></div>
+        }
+
+        @if (step() < 4) {
+          <button type="button" (click)="onNext()"
+            class="px-6 py-2.5 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl shadow-md transition-all text-sm">
+            {{ lang.t('next') }}
+          </button>
+        } @else {
+          <button type="button" (click)="onSubmit()" [disabled]="!consented || loading()"
+            class="px-6 py-2.5 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl shadow-md transition-all text-sm disabled:opacity-50 flex items-center gap-2">
+            @if (loading()) {
+              <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ lang.currentLang() === 'en' ? 'Submitting form...' : 'جاري إرسال البيانات...' }}</span>
+            } @else {
+              <span>{{ lang.t('submitForm') }}</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

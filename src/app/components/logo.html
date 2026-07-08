@@ -1,0 +1,39 @@
+<div class="flex items-center gap-3">
+  <svg [attr.width]="size()" [attr.height]="size()" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" class="select-none drop-shadow-md">
+    <!-- Circular Defs for Text Path -->
+    <defs>
+      <path id="textCirclePath" d="M 30,100 A 70,70 0 1,1 170,100" fill="none" />
+      <path id="textRightPath" d="M 170,100 A 70,70 0 0,1 30,100" fill="none" />
+    </defs>
+
+    <!-- Red Concentric Circles representing Drop Outline -->
+    <circle cx="100" cy="100" r="50" stroke="#D32F2F" stroke-width="4" fill="none" stroke-dasharray="6,6" />
+    <circle cx="100" cy="100" r="58" stroke="#D32F2F" stroke-width="2" fill="none" opacity="0.4" />
+
+    <!-- Blood Drop Path (Solid Red) -->
+    <path d="M100 42C100 42 75 75 75 98C75 111.807 86.1929 123 100 123C113.807 123 125 111.807 125 98C125 75 100 42 100 42Z" fill="#D32F2F" />
+
+    <!-- White Heart Inside Blood Drop -->
+    <path d="M100 108L96.2 104.55C82.8 92.4 74 84.42 74 74.6C74 66.62 80.28 60.35 88.2 60.35C92.68 60.35 96.98 62.44 100 65.73C103.02 62.44 107.32 60.35 111.8 60.35C119.72 60.35 126 66.62 126 74.6C126 84.42 117.2 92.4 103.8 104.6L100 108Z" fill="#FFFFFF" transform="scale(0.35) translate(186, 182)" />
+
+    <!-- Black/Charcoal Holding Hands at the Bottom -->
+    <!-- Left Hand -->
+    <path d="M60 145C45 130 35 100 40 75C40 70 38 65 35 70C30 80 30 115 50 150C60 168 85 178 95 180C97 180 97 176 94 175C80 170 68 153 60 145Z" fill="currentColor" class="text-slate-800" />
+    <!-- Right Hand -->
+    <path d="M140 145C155 130 165 100 160 75C160 70 162 65 165 70C170 80 170 115 150 150C140 168 115 178 105 180C103 180 103 176 106 175C120 170 132 153 140 145Z" fill="currentColor" class="text-slate-800" />
+
+    <!-- Logo Curved Typography -->
+    <text class="fill-slate-800 font-medium text-[11px] tracking-[1.5px]" letter-spacing="1">
+      <textPath href="#textCirclePath" startOffset="50%" text-anchor="middle">Luminus Giving</textPath>
+    </text>
+    <text class="fill-slate-800 font-medium text-[11px] tracking-[1.5px]" letter-spacing="1">
+      <textPath href="#textRightPath" startOffset="50%" text-anchor="middle">Initiative</textPath>
+    </text>
+  </svg>
+  @if (showText()) {
+    <div class="flex flex-col">
+      <span class="font-extrabold text-lg tracking-wider text-brand-red uppercase leading-none">Luminus Giving</span>
+      <span class="text-xs text-slate-500 font-semibold tracking-widest uppercase mt-0.5">Initiative</span>
+    </div>
+  }
+</div>

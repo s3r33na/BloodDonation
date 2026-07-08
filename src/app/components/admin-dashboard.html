@@ -1,0 +1,401 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Admin Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight">
+          {{ lang.currentLang() === 'en' ? 'Admin Operations Center' : 'مركز إدارة العمليات والتحكم' }}
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">
+          {{ lang.currentLang() === 'en' ? 'Jordan Blood Donation Management System (Luminus Giving)' : 'نظام إدارة التبرع بالدم الأردني (عطاء لومينوس)' }}
+        </p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <a routerLink="/dashboard" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition-all shadow-sm">
+          {{ lang.t('dashboard') }}
+        </a>
+        <a routerLink="/feed" class="px-4 py-2 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl text-xs transition-all shadow-md">
+          {{ lang.t('feed') }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex gap-2 p-1 bg-slate-100 border border-slate-200 rounded-2xl mb-8 w-full overflow-x-auto whitespace-nowrap scrollbar-none">
+      <button (click)="activeTab = 'overview'" 
+        class="px-4 py-2 text-xs font-bold rounded-xl transition-all"
+        [class.bg-white]="activeTab === 'overview'" [class.text-brand-red]="activeTab === 'overview'"
+        [class.text-slate-500]="activeTab !== 'overview'">
+        {{ lang.currentLang() === 'en' ? 'Overview & Stats' : 'نظرة عامة وإحصائيات' }}
+      </button>
+      <button (click)="activeTab = 'checkin'" 
+        class="px-4 py-2 text-xs font-bold rounded-xl transition-all"
+        [class.bg-white]="activeTab === 'checkin'" [class.text-brand-red]="activeTab === 'checkin'"
+        [class.text-slate-500]="activeTab !== 'checkin'">
+        {{ lang.currentLang() === 'en' ? 'QR Check-In System' : 'نظام التحقق برمز QR' }}
+      </button>
+      <button (click)="activeTab = 'attendance'" 
+        class="px-4 py-2 text-xs font-bold rounded-xl transition-all"
+        [class.bg-white]="activeTab === 'attendance'" [class.text-brand-red]="activeTab === 'attendance'"
+        [class.text-slate-500]="activeTab !== 'attendance'">
+        {{ lang.currentLang() === 'en' ? 'Real-Time Attendance Table' : 'جدول الحضور الفوري' }}
+      </button>
+      <button (click)="activeTab = 'charts'" 
+        class="px-4 py-2 text-xs font-bold rounded-xl transition-all"
+        [class.bg-white]="activeTab === 'charts'" [class.text-brand-red]="activeTab === 'charts'"
+        [class.text-slate-500]="activeTab !== 'charts'">
+        {{ lang.currentLang() === 'en' ? 'Analytics & Charts' : 'الرسوم البيانية والتحليلات' }}
+      </button>
+    </div>
+
+    <!-- TAB 1: OVERVIEW & STATS -->
+    @if (activeTab === 'overview') {
+      <div>
+        @if (statsLoading()) {
+          <div class="flex items-center justify-center py-20">
+            <svg class="animate-spin h-8 w-8 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        } @else {
+          <!-- Stats Widget Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm transition-colors duration-300">
+              <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                {{ lang.currentLang() === 'en' ? 'Registered Donors' : 'المتبرعون المسجلون' }}
+              </span>
+              <strong class="text-3xl font-black text-slate-800 mt-2 block">{{ stats()?.totalRegisteredUsers }}</strong>
+            </div>
+
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm transition-colors duration-300">
+              <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                {{ lang.currentLang() === 'en' ? 'Screening Forms' : 'طلبات الفحص الطبي' }}
+              </span>
+              <strong class="text-3xl font-black text-slate-800 mt-2 block">{{ stats()?.newSubmissions }}</strong>
+            </div>
+
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm transition-colors duration-300">
+              <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                {{ lang.currentLang() === 'en' ? 'Total Bookings' : 'إجمالي الحجوزات' }}
+              </span>
+              <strong class="text-3xl font-black text-slate-800 mt-2 block">{{ stats()?.totalAppointments }}</strong>
+            </div>
+
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm transition-colors duration-300">
+              <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                {{ lang.currentLang() === 'en' ? 'Confirmed Donations' : 'التبرعات المؤكدة' }}
+              </span>
+              <strong class="text-3xl font-black text-emerald-600 mt-2 block">{{ stats()?.confirmedDonations }}</strong>
+            </div>
+          </div>
+
+          <!-- More Stats Detail Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm transition-colors duration-300">
+              <h3 class="font-extrabold text-slate-800 text-lg mb-4">
+                {{ lang.currentLang() === 'en' ? 'Post & Capacity Summaries' : 'ملخصات السعة والمنشورات' }}
+              </h3>
+              <div class="space-y-3.5 text-sm">
+                <div class="flex justify-between border-b border-slate-100 pb-2">
+                  <span class="text-slate-500">{{ lang.currentLang() === 'en' ? 'Upcoming Blood Drives (Events)' : 'حملات التبرع بالدم القادمة' }}</span>
+                  <strong class="text-slate-800">{{ stats()?.upcomingEvents }} {{ lang.currentLang() === 'en' ? 'active' : 'نشط' }}</strong>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 pb-2">
+                  <span class="text-slate-500">{{ lang.currentLang() === 'en' ? 'Emergency Requests' : 'طلبات الطوارئ العاجلة' }}</span>
+                  <strong class="text-brand-red">{{ stats()?.emergencyRequests }} {{ lang.currentLang() === 'en' ? 'active' : 'نشط' }}</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">{{ lang.currentLang() === 'en' ? 'Checked In Attendees' : 'الحاضرون الذين تم التحقق منهم' }}</span>
+                  <strong class="text-slate-800">{{ stats()?.eventAttendees }} {{ lang.currentLang() === 'en' ? 'checked in' : 'تم التسجيل' }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm transition-colors duration-300">
+              <h3 class="font-extrabold text-slate-800 text-lg mb-4">
+                {{ lang.currentLang() === 'en' ? 'Appointment Status Breakdowns' : 'تفاصيل حالات المواعيد' }}
+              </h3>
+              <div class="grid grid-cols-2 gap-4 text-center">
+                <div class="p-3 bg-blue-50 rounded-2xl">
+                  <span class="text-[10px] text-blue-500 block uppercase font-bold">{{ lang.currentLang() === 'en' ? 'Booked' : 'محجوز' }}</span>
+                  <strong class="text-xl text-blue-700 font-extrabold">{{ stats()?.bookedAppointments }}</strong>
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-2xl">
+                  <span class="text-[10px] text-emerald-500 block uppercase font-bold">{{ lang.currentLang() === 'en' ? 'Completed' : 'مكتمل' }}</span>
+                  <strong class="text-xl text-emerald-700 font-extrabold">{{ stats()?.completedAppointments }}</strong>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-2xl">
+                  <span class="text-[10px] text-amber-500 block uppercase font-bold">{{ lang.currentLang() === 'en' ? 'Canceled' : 'ملغي' }}</span>
+                  <strong class="text-xl text-amber-700 font-extrabold">{{ stats()?.canceledAppointments }}</strong>
+                </div>
+                <div class="p-3 bg-red-50 rounded-2xl">
+                  <span class="text-[10px] text-brand-red block uppercase font-bold">{{ lang.currentLang() === 'en' ? 'No Show' : 'لم يحضر' }}</span>
+                  <strong class="text-xl text-brand-red font-extrabold">{{ stats()?.noShowAppointments }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAB 2: QR CHECK-IN SYSTEM -->
+    @if (activeTab === 'checkin') {
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm max-w-2xl mx-auto transition-colors duration-300">
+        <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-2">
+          {{ lang.currentLang() === 'en' ? 'QR Code Check-In Scanner' : 'ماسح رمز التحقق QR لمواعيد التبرع' }}
+        </h2>
+        <p class="text-xs text-slate-500 mb-6">
+          {{ lang.currentLang() === 'en' ? 'Scan donor\'s booking QR Code token. The system automatically performs eligibility, duplicate check, and identity checks.' : 'امسح رمز QR الخاص بحجز المتبرع. يقوم النظام تلقائياً بالتحقق من الأهلية والهوية ومطابقة الحجز.' }}
+        </p>
+
+        <div class="space-y-6">
+          <!-- Scan Simulation/Input -->
+          <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+              {{ lang.currentLang() === 'en' ? 'Check-In Code Token (Manual Input)' : 'رمز تذكرة التحقق (إدخال يدوي)' }}
+            </label>
+            <div class="flex gap-2">
+              <input type="text" [(ngModel)]="qrTokenInput"
+                class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all font-mono"
+                placeholder="e.g. BDMS-XXXX-XXXX-XXXX" />
+              
+              <button (click)="onCheckInSubmit()" [disabled]="!qrTokenInput || checkinLoading()"
+                class="px-5 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50">
+                {{ lang.currentLang() === 'en' ? 'Verify Code' : 'التحقق والتبصيم' }}
+              </button>
+            </div>
+
+            <!-- Simulation Dropdown (lists active appointments so admin can simulate scan instantly) -->
+            <div class="mt-4 border-t border-slate-200 pt-4">
+              <span class="text-[10px] text-slate-400 font-bold block uppercase mb-2">
+                {{ lang.currentLang() === 'en' ? 'Test Panel: Simulate QR Scan from Bookings' : 'لوحة اختبار: محاكاة مسح رمز QR من المواعيد النشطة' }}
+              </span>
+              <select (change)="onSimulateSelect($event)"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs focus:outline-none">
+                <option value="">{{ lang.currentLang() === 'en' ? '-- Choose an active booking to copy token --' : '-- اختر حجزاً نشطاً لنسخ الرمز --' }}</option>
+                @for (appt of activeBookings(); track appt.id) {
+                  <option [value]="appt.qrCodeToken">
+                    {{ appt.donorName }} ({{ appt.donorBloodType }}) - {{ appt.eventName }} - {{ appt.qrCodeToken }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Success Alert -->
+          @if (checkinSuccess()) {
+            <div class="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-3">
+              <div class="flex items-center gap-2 text-emerald-800 font-extrabold text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                  <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                </svg>
+                <span>{{ lang.currentLang() === 'en' ? 'Check-In Verified Successfully!' : 'تم تأكيد حضور الموعد بنجاح!' }}</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-xs text-slate-600 mt-2 text-start">
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.t('fullName') }}</span>
+                  <strong>{{ checkinResult().donorName }}</strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.t('nationalId') }}</span>
+                  <strong>{{ checkinResult().nationalId }}</strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.t('bloodGroup') }}</span>
+                  <strong class="text-brand-red">{{ checkinResult().bloodGroup }}</strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ lang.currentLang() === 'en' ? 'Check-In Time' : 'وقت تسجيل الحضور' }}</span>
+                  <strong>{{ checkinResult().checkInTime | date:'yyyy-MM-dd HH:mm:ss' }}</strong>
+                </div>
+              </div>
+              <div class="pt-2 text-xs text-emerald-800 leading-normal text-start">
+                {{ lang.currentLang() === 'en' 
+                  ? 'Donor status updated to Checked In. Registered in attendance queue as Waiting.' 
+                  : 'تم تحديث حالة المتبرع إلى "مسجل الحضور". وتم إدراجه في طابور الانتظار.' }}
+              </div>
+            </div>
+          }
+
+          <!-- Error Alert -->
+          @if (checkinError()) {
+            <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs flex gap-2 font-semibold text-start">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 shrink-0">
+                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s9.75 4.365 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" />
+              </svg>
+              <span>{{ checkinError() }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB 3: REAL-TIME ATTENDANCE TABLE -->
+    @if (activeTab === 'attendance') {
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">
+              {{ lang.currentLang() === 'en' ? 'Active Event Attendee Queue' : 'طابور المتبرعين الحاضرين حالياً' }}
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">
+              {{ lang.currentLang() === 'en' ? 'Real-time listing of checked-in donors waiting or completing donations.' : 'قائمة فورية بالمتبرعين الذين تم تأكيد حضورهم بالمركز وينتظرون أو يقومون بالتبرع حالياً.' }}
+            </p>
+          </div>
+
+          <button (click)="loadAttendanceList()"
+            class="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all text-slate-600">
+            {{ lang.currentLang() === 'en' ? 'Refresh Queue' : 'تحديث الطابور' }}
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-start border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase">
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Check-In Time' : 'وقت الحضور' }}</th>
+                <th class="pb-3 text-start">{{ lang.t('fullName') }}</th>
+                <th class="pb-3 text-start">{{ lang.t('nationalId') }}</th>
+                <th class="pb-3 text-start">{{ lang.t('bloodGroup') }}</th>
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Event Name' : 'اسم الفعالية' }}</th>
+                <th class="pb-3 text-start">{{ lang.currentLang() === 'en' ? 'Donation Status' : 'حالة التبرع' }}</th>
+                <th class="pb-3 text-end">{{ lang.currentLang() === 'en' ? 'Actions' : 'إجراءات' }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              @for (person of attendanceQueue(); track person.id) {
+                <tr>
+                  <td class="py-3.5 text-xs text-start">{{ person.checkInTime | date:'HH:mm:ss' }}</td>
+                  <td class="py-3.5 font-bold text-start">{{ person.donorName }}</td>
+                  <td class="py-3.5 font-mono text-xs text-start">{{ person.donorNationalId }}</td>
+                  <td class="py-3.5 text-start"><span class="px-2 py-0.5 rounded font-black text-brand-red bg-red-50 text-xs">{{ person.donorBloodType }}</span></td>
+                  <td class="py-3.5 text-xs max-w-[150px] truncate text-start" [title]="person.eventName">{{ person.eventName }}</td>
+                  <td class="py-3.5 text-start">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
+                      [class.bg-blue-100]="person.status === 'Waiting'" [class.text-blue-700]="person.status === 'Waiting'"
+                      [class.bg-amber-100]="person.status === 'Donating'" [class.text-amber-700]="person.status === 'Donating'"
+                      [class.bg-emerald-100]="person.status === 'Completed'" [class.text-emerald-700]="person.status === 'Completed'"
+                      [class.bg-red-100]="person.status === 'Rejected'" [class.text-red-700]="person.status === 'Rejected'">
+                      @if (person.status === 'Waiting') {
+                        {{ lang.currentLang() === 'en' ? 'Waiting' : 'في الانتظار' }}
+                      } @else if (person.status === 'Donating') {
+                        {{ lang.currentLang() === 'en' ? 'Donating' : 'قيد السحب' }}
+                      } @else if (person.status === 'Completed') {
+                        {{ lang.currentLang() === 'en' ? 'Completed' : 'مكتمل' }}
+                      } @else {
+                        {{ lang.currentLang() === 'en' ? 'Rejected' : 'مرفوض' }}
+                      }
+                    </span>
+                  </td>
+                  <td class="py-3.5 text-end">
+                    <div class="flex justify-end gap-1.5">
+                      <button (click)="openStatusModal(person)"
+                        class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-all">
+                        {{ lang.currentLang() === 'en' ? 'Edit Status' : 'تعديل الحالة' }}
+                      </button>
+                      <button (click)="printDonorLabel(person)"
+                        class="px-3 py-1 border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-lg text-[10px] font-bold transition-all">
+                        {{ lang.currentLang() === 'en' ? 'Print' : 'طباعة ملصق' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="py-12 text-center text-slate-400 text-xs">
+                    {{ lang.currentLang() === 'en' ? 'No checked-in donors in queue today. Scanned QR codes populate this list.' : 'لا يوجد متبرعون في الطابور اليوم بعد. سيظهر المتبرعون هنا فور تسجيل حضورهم عبر رمز QR.' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- TAB 4: ANALYTICS & CHARTS -->
+    @if (activeTab === 'charts') {
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+        <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-6">
+          {{ lang.currentLang() === 'en' ? 'Analytical Visualizations' : 'الرسوم البيانية والتحليلات الإحصائية' }}
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-start">
+          <!-- Chart 1: Blood Availability vs Demand -->
+          <div class="border border-slate-100 p-5 rounded-2xl">
+            <h3 class="text-sm font-bold text-slate-700 mb-4">
+              {{ lang.currentLang() === 'en' ? 'Blood Supply vs Emergency Demand' : 'مخزون الدم المتوفر مقابل الطلبات الطارئة' }}
+            </h3>
+            <div class="h-64 relative">
+              <canvas #bloodChart></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: Attendance Rates -->
+          <div class="border border-slate-100 p-5 rounded-2xl">
+            <h3 class="text-sm font-bold text-slate-700 mb-4">
+              {{ lang.currentLang() === 'en' ? 'Appointment Attendance Rates' : 'معدلات الحضور والغياب للمواعيد المحجوزة' }}
+            </h3>
+            <div class="h-64 relative">
+              <canvas #attendanceChart></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Status Change Modal -->
+    @if (showModal()) {
+      <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl relative text-start">
+          <button (click)="closeStatusModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-2">
+            {{ lang.currentLang() === 'en' ? 'Update Donation Status' : 'تحديث حالة عملية التبرع بالدم' }}
+          </h2>
+          <p class="text-xs text-slate-500 mb-6">
+            {{ lang.currentLang() === 'en' ? 'Donor:' : 'المتبرع:' }} {{ targetPerson()?.donorName }} ({{ targetPerson()?.donorBloodType }})
+          </p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Select Workflow Status' : 'اختر حالة التدفق الجارية' }}
+              </label>
+              <select [(ngModel)]="newQueueStatus"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all">
+                <option value="Waiting">{{ lang.currentLang() === 'en' ? 'Waiting (Initial)' : 'في الانتظار (تم الدخول)' }}</option>
+                <option value="Donating">{{ lang.currentLang() === 'en' ? 'Donating (Currently drawing blood)' : 'قيد سحب الدم (على السرير)' }}</option>
+                <option value="Completed">{{ lang.currentLang() === 'en' ? 'Completed (Success - drawing finished)' : 'مكتمل بنجاح (تم السحب)' }}</option>
+                <option value="Rejected">{{ lang.currentLang() === 'en' ? 'Rejected (Ineligible at venue)' : 'مرفوض/غير مؤهل طبياً بالمركز' }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                {{ lang.currentLang() === 'en' ? 'Medical/Admin Notes' : 'ملاحظات الطبيب / الإدارية' }}
+              </label>
+              <input type="text" [(ngModel)]="queueNotes"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all"
+                placeholder="e.g. Draw completed successfully 450ml" />
+            </div>
+
+            <button (click)="submitStatusUpdate()"
+              class="w-full py-3 px-4 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl shadow-md transition-all">
+              {{ lang.currentLang() === 'en' ? 'Update Status' : 'تحديث وتأكيد الحالة' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

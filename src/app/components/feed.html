@@ -1,0 +1,292 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 transition-colors duration-300">
+  <div class="max-w-6xl mx-auto">
+    <!-- Feed Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight">{{ lang.t('activeFeedTitle') }}</h1>
+        <p class="text-sm text-slate-500 mt-1">{{ lang.t('activeFeedSubtitle') }}</p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        @if (user() && user()?.role === 'Admin') {
+          <a routerLink="/admin" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition-all shadow-sm">
+            {{ lang.t('adminPanel') }}
+          </a>
+        }
+        <a routerLink="/dashboard" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all shadow-sm">
+          {{ lang.t('dashboard') }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm mb-8 transition-colors duration-300">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div class="relative">
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="loadFeed()"
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all"
+            [placeholder]="lang.t('searchLocation')" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
+          </svg>
+        </div>
+
+        <!-- Type Filter -->
+        <div>
+          <select [(ngModel)]="typeFilter" (change)="loadFeed()"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all">
+            <option value="">{{ lang.t('allPostTypes') }}</option>
+            <option value="Event">{{ lang.t('donationEvents') }}</option>
+            <option value="Emergency">{{ lang.t('emergencyRequests') }}</option>
+          </select>
+        </div>
+
+        <!-- Blood Type Filter -->
+        <div>
+          <select [(ngModel)]="bloodFilter" (change)="loadFeed()"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all">
+            <option value="">{{ lang.t('anyBloodType') }}</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+
+        <button (click)="resetFilters()"
+          class="w-full py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-bold transition-all">
+          {{ lang.t('resetFilters') }}
+        </button>
+      </div>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+        {{ errorMsg() }}
+      </div>
+    }
+    @if (successMsg()) {
+      <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+        {{ successMsg() }}
+      </div>
+    }
+
+    <!-- Feed List -->
+    @if (loading()) {
+      <div class="flex flex-col items-center justify-center py-20">
+        <svg class="animate-spin h-8 w-8 text-brand-red mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm text-slate-500">{{ lang.currentLang() === 'en' ? 'Loading feed events...' : 'جاري تحميل المنشورات...' }}</span>
+      </div>
+    } @else if (posts().length === 0) {
+      <div class="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
+        </svg>
+        <h3 class="text-lg font-bold text-slate-800">{{ lang.currentLang() === 'en' ? 'No active posts' : 'لا توجد إعلانات نشطة' }}</h3>
+        <p class="text-sm text-slate-500 mt-1">{{ lang.currentLang() === 'en' ? 'Try modifying your filters or search keywords.' : 'يرجى تعديل خيارات التصفية والبحث.' }}</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @for (post of posts(); track post.id) {
+          <!-- Event Post -->
+          @if (post.type === 'Event') {
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between">
+              <!-- Tag -->
+              <div class="absolute right-0 top-0 bg-blue-50 text-blue-600 font-extrabold uppercase text-[10px] tracking-wider px-4 py-1.5 rounded-bl-2xl">
+                {{ lang.t('donationEventTag') }}
+              </div>
+
+              <div>
+                <h3 class="text-xl font-bold text-slate-800 pr-24 leading-snug">{{ post.title }}</h3>
+                <p class="text-sm text-slate-500 mt-2">{{ post.description }}</p>
+
+                <!-- Details -->
+                <div class="grid grid-cols-2 gap-4 mt-6 text-xs text-slate-600">
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                    <span>{{ post.location }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+                    </svg>
+                    <span>{{ post.startDateTime | date:'yyyy-MM-dd HH:mm' }} {{ lang.currentLang() === 'en' ? 'to' : 'إلى' }} {{ post.endDateTime | date:'yyyy-MM-dd HH:mm' }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.97 5.97 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                    </svg>
+                    <span>{{ lang.t('openCapacity') }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Booking Button -->
+              <div class="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
+                <div>
+                  <span class="text-xs text-emerald-500 font-bold">{{ lang.t('bookingAvailable') }}</span>
+                </div>
+
+                <button 
+                  (click)="onOpenBooking(post)"
+                  [disabled]="bookingLoading()"
+                  class="px-5 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark disabled:bg-slate-100 disabled:text-slate-400 text-white text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
+                  {{ lang.t('bookAppointment') }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Emergency Post -->
+          @if (post.type === 'Emergency') {
+            <div class="bg-white border-2 border-red-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between glow-effect-red">
+              <!-- Tag -->
+              <div class="absolute right-0 top-0 bg-red-50 text-brand-red font-extrabold uppercase text-[10px] tracking-wider px-4 py-1.5 rounded-bl-2xl flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-brand-red animate-ping"></span>
+                <span>{{ lang.t('emergencyRequestTag') }}</span>
+              </div>
+
+              <div>
+                <div class="flex items-center gap-2 pr-28">
+                  <span class="px-2.5 py-1 bg-red-100 text-brand-red text-xs font-black rounded-lg">{{ post.bloodType }}</span>
+                  <h3 class="text-lg font-bold text-slate-800 leading-snug">{{ post.title }}</h3>
+                </div>
+                <p class="text-sm text-slate-500 mt-2">{{ post.description }}</p>
+
+                <!-- Details -->
+                <div class="grid grid-cols-2 gap-4 mt-6 text-xs text-slate-600">
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                    <span>{{ post.location }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-1.514 2.022a12.083 12.083 0 0 1-7.794-7.794l2.022-1.514c.361-.272.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                    </svg>
+                    <span>{{ post.contactInfo }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                    <span class="font-bold text-red-600">{{ lang.t('urgencyLevel') }} {{ post.urgencyLevel }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.97 5.97 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                    </svg>
+                    <span>{{ lang.currentLang() === 'en' ? 'Need:' : 'الحاجة:' }} {{ post.donorsNeeded }} {{ lang.currentLang() === 'en' ? 'donors' : 'متبرعين' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Expiry & Contact -->
+              <div class="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
+                <span class="text-xs text-slate-400">{{ lang.t('expires') }} {{ post.expiryTime | date:'yyyy-MM-dd HH:mm' }}</span>
+                <a [href]="'tel:' + post.contactInfo" 
+                  class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all shadow-sm">
+                  {{ lang.t('callCenter') }}
+                </a>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Booking Modal -->
+    @if (selectedPost()) {
+      <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+          <button (click)="onCloseBooking()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-2">
+            {{ lang.currentLang() === 'en' ? 'Book Slot:' : 'حجز موعد:' }} {{ selectedPost()?.title }}
+          </h2>
+          <p class="text-xs text-slate-500 mb-6">{{ lang.currentLang() === 'en' ? 'Location:' : 'الموقع:' }} {{ selectedPost()?.location }}</p>
+
+          <!-- Eligibility Check -->
+          @if (user()?.eligibilityStatus !== 'Eligible' && user()?.eligibilityStatus !== 'PendingReview') {
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs mb-6 leading-relaxed">
+              <strong>{{ lang.currentLang() === 'en' ? 'Access Restricted:' : 'تم تقييد الحجز:' }}</strong> 
+              {{ lang.currentLang() === 'en' ? 'Your screening eligibility is currently:' : 'حالة استبيان الأهلية الخاص بك حالياً هي:' }} 
+              <span class="font-black">{{ user()?.eligibilityStatus }}</span>.
+              {{ lang.currentLang() === 'en' ? "You must complete the registration form and have an approved 'Eligible' or 'PendingReview' status before booking appointment slots." : "يجب إكمال استبيان الفحص الطبي أولاً والحصول على حالة 'مؤهل' أو 'قيد المراجعة' للتمكن من حجز موعد." }}
+              <a routerLink="/screening" class="font-extrabold underline block mt-2 text-brand-red">
+                {{ lang.currentLang() === 'en' ? 'Go to Screening Form →' : 'الانتقال لاستبيان الأهلية الطبي ←' }}
+              </a>
+            </div>
+          } @else {
+            <div class="space-y-4">
+              <!-- Select Day -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('chooseDay') }}</label>
+                <select [(ngModel)]="selectedDay" (change)="onDayChange()"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red transition-all">
+                  @for (day of availableDays(); track day.value) {
+                    <option [value]="day.value">{{ day.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Select Time -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('chooseTime') }}</label>
+                <select [(ngModel)]="selectedHour" (change)="updateBookingDateTime()"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red transition-all">
+                  @for (hour of availableHours(); track hour) {
+                    <option [value]="hour">{{ hour }}</option>
+                  } @empty {
+                    <option value="">{{ lang.currentLang() === 'en' ? 'No hours available' : 'لا توجد ساعات متاحة' }}</option>
+                  }
+                </select>
+              </div>
+
+              @if (bookingError()) {
+                <p class="text-xs text-red-500 font-semibold">{{ bookingError() }}</p>
+              }
+
+              <button 
+                (click)="submitBooking()"
+                [disabled]="!bookingDateTime || bookingLoading()"
+                class="w-full mt-2 py-3 px-4 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red flex justify-center items-center gap-2">
+                @if (bookingLoading()) {
+                  <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{{ lang.currentLang() === 'en' ? 'Creating appointment...' : 'جاري حجز الموعد...' }}</span>
+                } @else {
+                  <span>{{ lang.t('confirmBooking') }}</span>
+                }
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
