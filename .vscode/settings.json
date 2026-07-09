@@ -1,0 +1,8 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["**/angular.json"],
+      "url": "file:///c:/Users/hazee/Downloads/sereen/BloodDonation/node_modules/@angular/cli/lib/config/schema.json"
+    }
+  ]
+}
