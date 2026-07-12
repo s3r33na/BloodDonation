@@ -165,3 +165,4 @@ C:\Users\HT\Desktop\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\rjs
 C:\Users\HT\Desktop\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
 C:\Users\HT\Desktop\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\staticwebassets.build.json.cache
 C:\Users\HT\Desktop\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\swae.build.ex.cache
+C:\Users\HT\Desktop\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\BloodDonation.API.sourcelink.json

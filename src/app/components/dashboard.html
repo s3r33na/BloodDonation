@@ -120,7 +120,7 @@
                   <div class="flex items-center gap-3">
                     <button (click)="selectAppointment(appt)"
                       class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
-                      {{ lang.currentLang() === 'en' ? 'View QR Ticket' : 'عرض تذكرة QR' }}
+                      {{ lang.currentLang() === 'en' ? 'View Ticket' : 'عرض تذكرة' }}
                     </button>
                     <button (click)="cancelAppointment(appt.id)"
                       class="px-4 py-2 border border-red-200 text-brand-red hover:bg-red-50 rounded-xl text-xs font-bold transition-all shadow-sm">
@@ -182,11 +182,10 @@
               <p class="text-xs text-slate-500 mb-6 leading-relaxed">{{ lang.t('ticketInfo') }}</p>
               
               <!-- QR Code Card Wrapper -->
-              <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl inline-block mb-4">
-                <!-- Direct Google QR Code API Integration for bulletproof generation -->
+              <!-- <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl inline-block mb-4">
                 <img [src]="'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + activeAppt()?.qrCodeToken" 
                   alt="QR Code" class="w-48 h-48 mx-auto rounded-lg shadow-sm" />
-              </div>
+              </div> -->
 
               <div class="text-xs font-mono text-slate-400 mt-2 bg-slate-50 border border-slate-100 w-full p-2.5 rounded-xl">
                 <span class="block uppercase tracking-wider text-[9px] font-bold text-slate-400 mb-0.5">{{ lang.currentLang() === 'en' ? 'Verification Token' : 'رمز التحقق المعتمد' }}</span>
@@ -215,7 +214,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 14v2m-3-3H9M13.5 17h.008v.008H13.5V17Zm0 2.25h.008v.008H13.5V19.25ZM16.5 17h.008v.008H16.5V17Zm0 2.25h.008v.008H16.5V19.25ZM12.5 15.75h.008v.008H12.5v-.008Zm0 2.25h.008v.008H12.5V18ZM13.5 15.75h.008v.008H13.5v-.008Zm0 2.25h.008v.008H13.5V18ZM14.75 17h.008v.008H14.75V17Zm0 2.25h.008v.008H14.75V19.25ZM18 17h.008v.008H18V17Zm0 2.25h.008v.008H18V19.25ZM18.75 15.75h.008v.008H18.75v-.008Zm0 2.25h.008v.008H18.75V18Z" />
               </svg>
               <p class="text-xs text-slate-400 max-w-[200px] mx-auto leading-relaxed">
-                {{ lang.currentLang() === 'en' ? 'Click "View QR Ticket" on an upcoming appointment card to display your verification pass here.' : 'انقر على "عرض تذكرة QR" في بطاقات المواعيد القادمة لعرض بطاقة التحقق الخاصة بك هنا.' }}
+                {{ lang.currentLang() === 'en' ? 'Click "View Ticket" on an upcoming appointment card to display your verification pass here.' : 'انقر على "عرض تذكرة" في بطاقات المواعيد القادمة لعرض بطاقة التحقق الخاصة بك هنا.' }}
               </p>
             </div>
           }

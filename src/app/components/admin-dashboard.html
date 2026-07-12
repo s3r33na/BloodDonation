@@ -161,7 +161,7 @@
             <div class="flex gap-2">
               <input type="text" [(ngModel)]="qrTokenInput"
                 class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all font-mono"
-                placeholder="e.g. BDMS-XXXX-XXXX-XXXX" />
+                placeholder="e.g. 123456" />
               
               <button (click)="onCheckInSubmit()" [disabled]="!qrTokenInput || checkinLoading()"
                 class="px-5 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50">

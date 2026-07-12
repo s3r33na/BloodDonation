@@ -103,6 +103,9 @@ namespace BloodDonation.API.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("BloodGroup")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -155,6 +158,8 @@ namespace BloodDonation.API.Migrations
                         .HasColumnType("REAL");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
 
                     b.HasIndex("UserId");
 
@@ -264,7 +269,7 @@ namespace BloodDonation.API.Migrations
                             AvailableSlots = 48,
                             BloodType = "",
                             ContactInfo = "",
-                            CreatedAt = new DateTime(2026, 6, 30, 16, 27, 13, 142, DateTimeKind.Utc).AddTicks(762),
+                            CreatedAt = new DateTime(2026, 7, 11, 14, 9, 48, 148, DateTimeKind.Utc).AddTicks(914),
                             Description = "Help us restore critical blood reserves. Join the national drive at Al-Hussein Park.",
                             DonorsNeeded = 0,
                             EndDateTime = new DateTime(2026, 7, 17, 17, 0, 0, 0, DateTimeKind.Utc),
@@ -283,7 +288,7 @@ namespace BloodDonation.API.Migrations
                             AvailableSlots = 30,
                             BloodType = "",
                             ContactInfo = "",
-                            CreatedAt = new DateTime(2026, 6, 30, 16, 27, 13, 142, DateTimeKind.Utc).AddTicks(1144),
+                            CreatedAt = new DateTime(2026, 7, 11, 14, 9, 48, 148, DateTimeKind.Utc).AddTicks(1166),
                             Description = "Your blood donation can save three lives. Come and contribute.",
                             DonorsNeeded = 0,
                             EndDateTime = new DateTime(2026, 7, 20, 18, 0, 0, 0, DateTimeKind.Utc),
@@ -302,7 +307,7 @@ namespace BloodDonation.API.Migrations
                             AvailableSlots = 0,
                             BloodType = "O-",
                             ContactInfo = "0790000001",
-                            CreatedAt = new DateTime(2026, 6, 30, 16, 27, 13, 142, DateTimeKind.Utc).AddTicks(3124),
+                            CreatedAt = new DateTime(2026, 7, 11, 14, 9, 48, 148, DateTimeKind.Utc).AddTicks(2335),
                             Description = "A patient is undergoing open-heart bypass surgery and requires immediate O- negative blood donations.",
                             DonorsNeeded = 3,
                             ExpiryTime = new DateTime(2026, 7, 10, 23, 59, 59, 0, DateTimeKind.Utc),
@@ -319,7 +324,7 @@ namespace BloodDonation.API.Migrations
                             AvailableSlots = 0,
                             BloodType = "A+",
                             ContactInfo = "0790000002",
-                            CreatedAt = new DateTime(2026, 6, 30, 16, 27, 13, 142, DateTimeKind.Utc).AddTicks(3130),
+                            CreatedAt = new DateTime(2026, 7, 11, 14, 9, 48, 148, DateTimeKind.Utc).AddTicks(2339),
                             Description = "Platelet donation needed for a leukemia patient undergoing chemotherapy at KHCC.",
                             DonorsNeeded = 5,
                             ExpiryTime = new DateTime(2026, 7, 12, 12, 0, 0, 0, DateTimeKind.Utc),
@@ -337,6 +342,10 @@ namespace BloodDonation.API.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("BloodType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -392,6 +401,7 @@ namespace BloodDonation.API.Migrations
                         new
                         {
                             Id = 1,
+                            BloodType = "",
                             CreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DateOfBirth = "1990-01-01",
                             EligibilityStatus = "Eligible",
@@ -438,11 +448,17 @@ namespace BloodDonation.API.Migrations
 
             modelBuilder.Entity("BloodDonation.API.Models.DonationForm", b =>
                 {
+                    b.HasOne("BloodDonation.API.Models.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId");
+
                     b.HasOne("BloodDonation.API.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Appointment");
 
                     b.Navigation("User");
                 });

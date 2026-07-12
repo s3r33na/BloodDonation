@@ -66,12 +66,12 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('dob') }}</label>
           <input type="date" name="dateOfBirth" [(ngModel)]="dateOfBirth" required
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm" />
-          <span class="text-[10px] text-slate-400">{{ lang.t('dobHint') }}</span>
+          <span class="text-[10px] text-slate-400 block mt-1">{{ lang.t('dobHint') }}</span>
         </div>
 
         <div>
@@ -80,6 +80,21 @@
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm">
             <option value="Male">{{ lang.t('male') }}</option>
             <option value="Female">{{ lang.t('female') }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.currentLang() === 'en' ? 'Blood Type' : 'فصيلة الدم' }}</label>
+          <select name="bloodType" [(ngModel)]="bloodType" required
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-slate-800 transition-all text-sm">
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
           </select>
         </div>
       </div>

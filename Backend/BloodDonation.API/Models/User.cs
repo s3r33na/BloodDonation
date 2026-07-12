@@ -11,6 +11,7 @@ namespace BloodDonation.API.Models
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string DateOfBirth { get; set; } = string.Empty;
+        public string BloodType { get; set; } = string.Empty;
         public string Gender { get; set; } = string.Empty;
         public string Nationality { get; set; } = string.Empty;
         public string Role { get; set; } = "User"; // "User" or "Admin"

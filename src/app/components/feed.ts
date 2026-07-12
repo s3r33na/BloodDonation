@@ -33,6 +33,39 @@ export class Feed implements OnInit {
   bookingLoading = signal(false);
   bookingError = signal('');
   minDateTime = '';
+  bookingStep = signal<number>(1);
+
+  // Screening Questions
+  feelGoodHealth = true;
+  beenRejected = false;
+  hadJaundiceOrHepatitis = false;
+  hadMalaria = false;
+  hadBrucellosisOrTyphoid = false;
+  sideEffectsPrevious = false;
+  traveledLast6Months = false;
+  chronicDiseases = {
+    blood: false,
+    lungs: false,
+    heart: false,
+    kidneys: false,
+    diabetes: false,
+    bloodPressure: false
+  };
+  takingMedicationsOrInjections = false;
+  faintingSpellsSeizures = false;
+  severeAllergies = false;
+  receivedVaccine14Days = false;
+  tattooOrCupping12Months = false;
+  surgeryOrTransfusion12Months = false;
+  dentistLastWeek = false;
+  pregnantOrRecentPregnancy = false;
+  breastfeeding = false;
+  threeOrMorePregnancies = false;
+
+  consentBloodDraw = false;
+  consentDeclaration = false;
+  recommendDonatedBlood = true;
+  receivedEducationalInfo = true;
 
   // Generated slots
   availableDays = signal<{ value: string, label: string }[]>([]);
@@ -86,7 +119,7 @@ export class Feed implements OnInit {
     
     const loopDate = new Date(startDay);
     while (loopDate <= endDay) {
-      const dateStr = loopDate.toISOString().slice(0, 10);
+      const dateStr = `${loopDate.getFullYear()}-${(loopDate.getMonth() + 1).toString().padStart(2, '0')}-${loopDate.getDate().toString().padStart(2, '0')}`;
       const label = loopDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       days.push({ value: dateStr, label });
       loopDate.setDate(loopDate.getDate() + 1);
@@ -119,8 +152,8 @@ export class Feed implements OnInit {
     const endHour = 17;
     const hours: string[] = [];
 
-    const startDayStr = start.toISOString().slice(0, 10);
-    const endDayStr = end.toISOString().slice(0, 10);
+    const startDayStr = `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, '0')}-${start.getDate().toString().padStart(2, '0')}`;
+    const endDayStr = `${end.getFullYear()}-${(end.getMonth() + 1).toString().padStart(2, '0')}-${end.getDate().toString().padStart(2, '0')}`;
 
     let dayStartHour = startHour;
     let dayEndHour = endHour;
@@ -161,8 +194,41 @@ export class Feed implements OnInit {
       return;
     }
     this.selectedPost.set(post);
+    this.bookingStep.set(1);
     this.bookingDateTime = '';
     this.bookingError.set('');
+    
+    // Reset all screening questions to default values
+    this.feelGoodHealth = true;
+    this.beenRejected = false;
+    this.hadJaundiceOrHepatitis = false;
+    this.hadMalaria = false;
+    this.hadBrucellosisOrTyphoid = false;
+    this.sideEffectsPrevious = false;
+    this.traveledLast6Months = false;
+    this.chronicDiseases = {
+      blood: false,
+      lungs: false,
+      heart: false,
+      kidneys: false,
+      diabetes: false,
+      bloodPressure: false
+    };
+    this.takingMedicationsOrInjections = false;
+    this.faintingSpellsSeizures = false;
+    this.severeAllergies = false;
+    this.receivedVaccine14Days = false;
+    this.tattooOrCupping12Months = false;
+    this.surgeryOrTransfusion12Months = false;
+    this.dentistLastWeek = false;
+    this.pregnantOrRecentPregnancy = false;
+    this.breastfeeding = false;
+    this.threeOrMorePregnancies = false;
+    this.consentBloodDraw = false;
+    this.consentDeclaration = false;
+    this.recommendDonatedBlood = true;
+    this.receivedEducationalInfo = true;
+
     if (post.type === 'Event') {
       this.generateSlots(post);
     }
@@ -172,6 +238,27 @@ export class Feed implements OnInit {
     this.selectedPost.set(null);
   }
 
+  nextStep() {
+    this.bookingError.set('');
+    if (this.bookingStep() === 1) {
+      this.updateBookingDateTime();
+      if (!this.bookingDateTime) {
+        this.bookingError.set('Please choose a date and time.');
+        return;
+      }
+      this.bookingStep.set(2);
+    } else if (this.bookingStep() === 2) {
+      this.bookingStep.set(3);
+    }
+  }
+
+  prevStep() {
+    this.bookingError.set('');
+    if (this.bookingStep() > 1) {
+      this.bookingStep.update(s => s - 1);
+    }
+  }
+
   submitBooking() {
     this.updateBookingDateTime();
     if (!this.bookingDateTime) {
@@ -179,11 +266,60 @@ export class Feed implements OnInit {
       return;
     }
 
+    if (!this.consentBloodDraw || !this.consentDeclaration) {
+      this.bookingError.set('You must accept all consents to submit your booking.');
+      return;
+    }
+
     this.bookingLoading.set(true);
     this.bookingError.set('');
     this.successMsg.set('');
 
-    this.api.bookAppointment(this.selectedPost().id, this.bookingDateTime).subscribe({
+    // Compile chronic diseases list
+    const chronicList: string[] = [];
+    if (this.chronicDiseases.blood) chronicList.push('Blood');
+    if (this.chronicDiseases.lungs) chronicList.push('Lungs');
+    if (this.chronicDiseases.heart) chronicList.push('Heart');
+    if (this.chronicDiseases.kidneys) chronicList.push('Kidneys');
+    if (this.chronicDiseases.diabetes) chronicList.push('Diabetes');
+    if (this.chronicDiseases.bloodPressure) chronicList.push('BloodPressure');
+
+    // Compile female specific list
+    const femaleList: string[] = [];
+    if (this.user()?.gender === 'Female') {
+      if (this.pregnantOrRecentPregnancy) femaleList.push('PregnantOrRecentPregnancy');
+      if (this.breastfeeding) femaleList.push('Breastfeeding');
+      if (this.threeOrMorePregnancies) femaleList.push('ThreeOrMorePregnancies');
+    }
+
+    const payload = {
+      postId: this.selectedPost().id,
+      appointmentDateTime: this.bookingDateTime,
+      screening: {
+        feelGoodHealth: this.feelGoodHealth,
+        beenRejected: this.beenRejected,
+        hadJaundiceOrHepatitis: this.hadJaundiceOrHepatitis,
+        hadMalaria: this.hadMalaria,
+        hadBrucellosisOrTyphoid: this.hadBrucellosisOrTyphoid,
+        sideEffectsPrevious: this.sideEffectsPrevious,
+        traveledLast6Months: this.traveledLast6Months,
+        chronicDiseases: chronicList,
+        takingMedicationsOrInjections: this.takingMedicationsOrInjections,
+        faintingSpellsSeizures: this.faintingSpellsSeizures,
+        severeAllergies: this.severeAllergies,
+        receivedVaccine14Days: this.receivedVaccine14Days,
+        tattooOrCupping12Months: this.tattooOrCupping12Months,
+        surgeryOrTransfusion12Months: this.surgeryOrTransfusion12Months,
+        dentistLastWeek: this.dentistLastWeek,
+        femalePregnancyStatus: femaleList,
+        consentBloodDraw: this.consentBloodDraw,
+        consentDeclaration: this.consentDeclaration,
+        recommendDonatedBlood: this.recommendDonatedBlood,
+        receivedEducationalInfo: this.receivedEducationalInfo
+      }
+    };
+
+    this.api.bookAppointment(payload).subscribe({
       next: () => {
         this.bookingLoading.set(false);
         this.successMsg.set('Appointment booked successfully! Confirmation notification generated.');

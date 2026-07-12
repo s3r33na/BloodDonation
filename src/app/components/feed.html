@@ -216,77 +216,533 @@
     <!-- Booking Modal -->
     @if (selectedPost()) {
       <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
-          <button (click)="onCloseBooking()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+        <div [class]="'bg-white border border-slate-200 rounded-3xl p-6 w-full shadow-2xl relative transition-all duration-300 flex flex-col ' + (bookingStep() === 3 ? 'max-w-3xl max-h-[90vh]' : 'max-w-md')">
+          <button (click)="onCloseBooking()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
 
-          <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-2">
-            {{ lang.currentLang() === 'en' ? 'Book Slot:' : 'حجز موعد:' }} {{ selectedPost()?.title }}
+          <h2 class="text-lg font-black text-slate-800 tracking-tight mb-0.5">
+            {{ lang.currentLang() === 'en' ? 'Book Appointment' : 'حجز موعد تبرع' }}
           </h2>
-          <p class="text-xs text-slate-500 mb-6">{{ lang.currentLang() === 'en' ? 'Location:' : 'الموقع:' }} {{ selectedPost()?.location }}</p>
+          <p class="text-xs text-slate-500 mb-4">
+            {{ selectedPost()?.title }} - {{ selectedPost()?.location }}
+          </p>
 
-          <!-- Eligibility Check -->
-          @if (user()?.eligibilityStatus !== 'Eligible' && user()?.eligibilityStatus !== 'PendingReview') {
-            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs mb-6 leading-relaxed">
+          <!-- Step Indicators -->
+          <div class="flex items-center gap-2 mb-6 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span [class]="bookingStep() === 1 ? 'text-brand-red' : ''">{{ lang.currentLang() === 'en' ? '1. Slot' : '١. الوقت' }}</span>
+            <span class="w-4 h-[1px] bg-slate-200"></span>
+            <span [class]="bookingStep() === 2 ? 'text-brand-red' : ''">{{ lang.currentLang() === 'en' ? '2. Review' : '٢. المراجعة' }}</span>
+            <span class="w-4 h-[1px] bg-slate-200"></span>
+            <span [class]="bookingStep() === 3 ? 'text-brand-red' : ''">{{ lang.currentLang() === 'en' ? '3. Screening' : '٣. الاستبيان' }}</span>
+          </div>
+
+          <!-- Eligibility Check for active suspensions -->
+          @if (user()?.eligibilityStatus === 'PermanentlyNotEligible' || user()?.eligibilityStatus === 'TemporarilyNotEligible') {
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs mb-4 leading-relaxed">
               <strong>{{ lang.currentLang() === 'en' ? 'Access Restricted:' : 'تم تقييد الحجز:' }}</strong> 
-              {{ lang.currentLang() === 'en' ? 'Your screening eligibility is currently:' : 'حالة استبيان الأهلية الخاص بك حالياً هي:' }} 
+              {{ lang.currentLang() === 'en' ? 'Your screening eligibility status is currently:' : 'حالة أهليتك الطبية حالياً هي:' }} 
               <span class="font-black">{{ user()?.eligibilityStatus }}</span>.
-              {{ lang.currentLang() === 'en' ? "You must complete the registration form and have an approved 'Eligible' or 'PendingReview' status before booking appointment slots." : "يجب إكمال استبيان الفحص الطبي أولاً والحصول على حالة 'مؤهل' أو 'قيد المراجعة' للتمكن من حجز موعد." }}
-              <a routerLink="/screening" class="font-extrabold underline block mt-2 text-brand-red">
-                {{ lang.currentLang() === 'en' ? 'Go to Screening Form →' : 'الانتقال لاستبيان الأهلية الطبي ←' }}
-              </a>
+              {{ lang.currentLang() === 'en' ? "You are deferred from booking appointment slots under local regulations due to medical eligibility." : "لا يمكنك حجز موعد نظراً لوجود تعليق أو عدم أهلية طبية نشطة." }}
+            </div>
+            <div class="flex justify-end mt-4">
+              <button (click)="onCloseBooking()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-all">
+                {{ lang.currentLang() === 'en' ? 'Close' : 'إغلاق' }}
+              </button>
             </div>
           } @else {
-            <div class="space-y-4">
-              <!-- Select Day -->
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('chooseDay') }}</label>
-                <select [(ngModel)]="selectedDay" (change)="onDayChange()"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red transition-all">
-                  @for (day of availableDays(); track day.value) {
-                    <option [value]="day.value">{{ day.label }}</option>
-                  }
-                </select>
-              </div>
+            <div class="flex-1 flex flex-col overflow-hidden">
+              <!-- STEP 1: Select Slot -->
+              @if (bookingStep() === 1) {
+                <div class="space-y-4">
+                  <!-- Select Day -->
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('chooseDay') }}</label>
+                    <select [(ngModel)]="selectedDay" (change)="onDayChange()"
+                      class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red transition-all">
+                      @for (day of availableDays(); track day.value) {
+                        <option [value]="day.value">{{ day.label }}</option>
+                      }
+                    </select>
+                  </div>
 
-              <!-- Select Time -->
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('chooseTime') }}</label>
-                <select [(ngModel)]="selectedHour" (change)="updateBookingDateTime()"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red transition-all">
-                  @for (hour of availableHours(); track hour) {
-                    <option [value]="hour">{{ hour }}</option>
-                  } @empty {
-                    <option value="">{{ lang.currentLang() === 'en' ? 'No hours available' : 'لا توجد ساعات متاحة' }}</option>
-                  }
-                </select>
-              </div>
+                  <!-- Select Time -->
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">{{ lang.t('chooseTime') }}</label>
+                    <select [(ngModel)]="selectedHour" (change)="updateBookingDateTime()"
+                      class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red transition-all">
+                      @for (hour of availableHours(); track hour) {
+                        <option [value]="hour">{{ hour }}</option>
+                      } @empty {
+                        <option value="">{{ lang.currentLang() === 'en' ? 'No hours available' : 'لا توجد ساعات متاحة' }}</option>
+                      }
+                    </select>
+                  </div>
 
-              @if (bookingError()) {
-                <p class="text-xs text-red-500 font-semibold">{{ bookingError() }}</p>
+                  @if (bookingError()) {
+                    <p class="text-xs text-red-500 font-semibold">{{ bookingError() }}</p>
+                  }
+
+                  <div class="flex justify-end gap-3 mt-6">
+                    <button (click)="onCloseBooking()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-all">
+                      {{ lang.currentLang() === 'en' ? 'Cancel' : 'إلغاء' }}
+                    </button>
+                    <button (click)="nextStep()" class="px-5 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-bold text-xs transition-all">
+                      {{ lang.currentLang() === 'en' ? 'Continue' : 'استمرار' }} →
+                    </button>
+                  </div>
+                </div>
               }
 
-              <button 
-                (click)="submitBooking()"
-                [disabled]="!bookingDateTime || bookingLoading()"
-                class="w-full mt-2 py-3 px-4 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red flex justify-center items-center gap-2">
-                @if (bookingLoading()) {
-                  <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>{{ lang.currentLang() === 'en' ? 'Creating appointment...' : 'جاري حجز الموعد...' }}</span>
-                } @else {
-                  <span>{{ lang.t('confirmBooking') }}</span>
-                }
-              </button>
+              <!-- STEP 2: Profile Review (Read-only) -->
+              @if (bookingStep() === 2) {
+                <div class="space-y-4">
+                  <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-wider mb-3">
+                      {{ lang.currentLang() === 'en' ? 'Donor Details (From Signup)' : 'بيانات المتبرع (من التسجيل الأول)' }}
+                    </span>
+                    <div class="space-y-2.5 text-xs text-slate-700">
+                      <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                        <strong>{{ lang.currentLang() === 'en' ? 'Full Name' : 'الاسم الكامل' }}:</strong>
+                        <span>{{ user()?.fullName }}</span>
+                      </div>
+                      <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                        <strong>{{ lang.currentLang() === 'en' ? 'National ID' : 'الرقم الوطني' }}:</strong>
+                        <span>{{ user()?.nationalId }}</span>
+                      </div>
+                      <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                        <strong>{{ lang.currentLang() === 'en' ? 'Date of Birth' : 'تاريخ الميلاد' }}:</strong>
+                        <span>{{ user()?.dateOfBirth }}</span>
+                      </div>
+                      <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                        <strong>{{ lang.currentLang() === 'en' ? 'Blood Type' : 'فصيلة الدم' }}:</strong>
+                        <span class="text-brand-red font-black">{{ user()?.bloodType }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <strong>{{ lang.currentLang() === 'en' ? 'Email' : 'البريد الإلكتروني' }}:</strong>
+                        <span>{{ user()?.email }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="text-[10px] text-slate-400 leading-relaxed bg-blue-50 border border-blue-100 p-3 rounded-xl text-blue-800">
+                    {{ lang.currentLang() === 'en' ? 'To ensure safety, the profile details above are reused from registration. These cannot be edited here.' : 'البيانات أعلاه مستوردة من حسابك للتأكد من الهوية، وهي غير قابلة للتعديل من هذه اللوحة.' }}
+                  </div>
+
+                  @if (bookingError()) {
+                    <p class="text-xs text-red-500 font-semibold">{{ bookingError() }}</p>
+                  }
+
+                  <div class="flex justify-between items-center mt-6">
+                    <button (click)="prevStep()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-all">
+                      ← {{ lang.currentLang() === 'en' ? 'Back' : 'الرجوع' }}
+                    </button>
+                    <button (click)="nextStep()" class="px-5 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-bold text-xs transition-all">
+                      {{ lang.currentLang() === 'en' ? 'Start Questionnaire' : 'بدء الاستبيان الطبي' }} →
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- STEP 3: Dynamic Screening Questions -->
+              @if (bookingStep() === 3) {
+                <div class="flex-1 flex flex-col overflow-hidden">
+                  <div class="flex-1 overflow-y-auto pr-2 space-y-4 my-2 border-y border-slate-100 py-3">
+                    <div class="p-3 bg-slate-50 rounded-xl text-[10px] text-slate-500 leading-relaxed">
+                      {{ lang.currentLang() === 'en' 
+                          ? 'Please answer all screening questions truthfully. Your answers are required fresh for each appointment.' 
+                          : 'الرجاء الإجابة على جميع الأسئلة بصدق ودقة. يتم تقديم هذا الاستبيان بشكل جديد لكل موعد حجز.' }}
+                    </div>
+
+                    <!-- Q1 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '1. Do you feel in good health?' : '١. هل تشعر بصحة جيدة؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="feelGoodHealth" [value]="true" [(ngModel)]="feelGoodHealth" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="feelGoodHealth" [value]="false" [(ngModel)]="feelGoodHealth" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '2. Have you ever been rejected as a donor?' : '٢. هل سبق لك وأن رفضت كمتبرع؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="beenRejected" [value]="true" [(ngModel)]="beenRejected" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="beenRejected" [value]="false" [(ngModel)]="beenRejected" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '3. Have you ever had jaundice or hepatitis?' : '٣. هل سبق وأن أصبت باليرقان أو التهاب الكبد؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="hadJaundiceOrHepatitis" [value]="true" [(ngModel)]="hadJaundiceOrHepatitis" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="hadJaundiceOrHepatitis" [value]="false" [(ngModel)]="hadJaundiceOrHepatitis" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '4. Have you ever had malaria?' : '٤. هل سبق وأن أصبت بالملاريا؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="hadMalaria" [value]="true" [(ngModel)]="hadMalaria" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="hadMalaria" [value]="false" [(ngModel)]="hadMalaria" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q5 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '5. Have you ever had brucellosis / typhoid fever?' : '٥. هل سبق وأن أصبت بالحمى المالطية / حمى التيفوئيد؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="hadBrucellosisOrTyphoid" [value]="true" [(ngModel)]="hadBrucellosisOrTyphoid" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="hadBrucellosisOrTyphoid" [value]="false" [(ngModel)]="hadBrucellosisOrTyphoid" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q6 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '6. Have you experienced any side effects after donating blood previously?' : '٦. هل أصبت بأية أعراض جانبية بعد تبرعك بالدم سابقاً؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="sideEffectsPrevious" [value]="true" [(ngModel)]="sideEffectsPrevious" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="sideEffectsPrevious" [value]="false" [(ngModel)]="sideEffectsPrevious" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q7 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '7. Have you traveled outside the country in the last six months?' : '٧. هل سافرت في آخر ستة أشهر خارج البلاد؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="traveledLast6Months" [value]="true" [(ngModel)]="traveledLast6Months" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="traveledLast6Months" [value]="false" [(ngModel)]="traveledLast6Months" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q8 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '8. Do you suffer from any of the following diseases?' : '٨. هل أنت مصاب بأي من الأمراض التالية؟' }}
+                      </div>
+                      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-600">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="chronicDiseases.blood" /> 
+                          {{ lang.currentLang() === 'en' ? 'Blood' : 'الدم' }}
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="chronicDiseases.lungs" /> 
+                          {{ lang.currentLang() === 'en' ? 'Lungs' : 'الرئة' }}
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="chronicDiseases.heart" /> 
+                          {{ lang.currentLang() === 'en' ? 'Heart' : 'القلب' }}
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="chronicDiseases.kidneys" /> 
+                          {{ lang.currentLang() === 'en' ? 'Kidneys' : 'الكلى' }}
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="chronicDiseases.diabetes" /> 
+                          {{ lang.currentLang() === 'en' ? 'Diabetes' : 'السكري' }}
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="chronicDiseases.bloodPressure" /> 
+                          {{ lang.currentLang() === 'en' ? 'Blood Pressure' : 'الضغط' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q9 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' 
+                            ? '9. Are you taking medications for any disease? / Do you take any medications via injection?' 
+                            : '٩. هل تتناول أدوية لأي مرض؟ / هل تأخذ أية أدوية عن طريق الإبر؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="takingMedicationsOrInjections" [value]="true" [(ngModel)]="takingMedicationsOrInjections" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="takingMedicationsOrInjections" [value]="false" [(ngModel)]="takingMedicationsOrInjections" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q10 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '10. Do you suffer from fainting spells and seizures?' : '١٠. هل تشكو من نوبات إغماء وتشنج؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="faintingSpellsSeizures" [value]="true" [(ngModel)]="faintingSpellsSeizures" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="faintingSpellsSeizures" [value]="false" [(ngModel)]="faintingSpellsSeizures" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q11 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '11. Do you suffer from severe allergies?' : '١١. هل تشكو من حساسية مفرطة؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="severeAllergies" [value]="true" [(ngModel)]="severeAllergies" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="severeAllergies" [value]="false" [(ngModel)]="severeAllergies" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q12 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '12. Have you received any vaccine in the past ( 14 ) days?' : '١٢. هل أخذت أي مطعوم خلال الـ ( ١٤ ) يوماً الماضية؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="receivedVaccine14Days" [value]="true" [(ngModel)]="receivedVaccine14Days" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="receivedVaccine14Days" [value]="false" [(ngModel)]="receivedVaccine14Days" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q13 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '13. Have you had a tattoo / cupping (hijama) in the past ( 12 ) months?' : '١٣. هل عملت وشم / حجامة خلال الـ ( ١٢ ) شهراً الماضية؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="tattooOrCupping12Months" [value]="true" [(ngModel)]="tattooOrCupping12Months" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="tattooOrCupping12Months" [value]="false" [(ngModel)]="tattooOrCupping12Months" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q14 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '14. Have you had surgery or received a blood transfusion in the past ( 12 ) months?' : '١٤. هل أجريت لك عملية جراحية أو نقل إليك دم خلال الـ ( ١٢ ) شهراً الماضية؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="surgeryOrTransfusion12Months" [value]="true" [(ngModel)]="surgeryOrTransfusion12Months" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="surgeryOrTransfusion12Months" [value]="false" [(ngModel)]="surgeryOrTransfusion12Months" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q15 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '15. Have you visited the dentist in the past week?' : '١٥. هل راجعت طبيب الأسنان خلال الأسبوع الماضي؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="dentistLastWeek" [value]="true" [(ngModel)]="dentistLastWeek" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="dentistLastWeek" [value]="false" [(ngModel)]="dentistLastWeek" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q16 (Female specific) -->
+                    @if (user()?.gender === 'Female') {
+                      <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                        <div class="text-xs text-slate-700 font-bold mb-2.5">
+                          {{ lang.currentLang() === 'en' 
+                              ? '16. For women: Are you pregnant / breastfeeding / had 3+ pregnancies?' 
+                              : '١٦. للنساء: هل أنت حامل أو ترضعين أو حملت ٣ مرات أو أكثر؟' }}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600">
+                          <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" [(ngModel)]="pregnantOrRecentPregnancy" /> 
+                            {{ lang.currentLang() === 'en' ? 'Pregnant (last 6 mo)' : 'حامل (في الـ 6 أشهر الماضية)' }}
+                          </label>
+                          <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" [(ngModel)]="breastfeeding" /> 
+                            {{ lang.currentLang() === 'en' ? 'Breastfeeding' : 'مرضعة' }}
+                          </label>
+                          <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" [(ngModel)]="threeOrMorePregnancies" /> 
+                            {{ lang.currentLang() === 'en' ? '3+ Pregnancies' : '٣ أحمال أو أكثر' }}
+                          </label>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Q17 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '17. Do you recommend giving the donated blood unit to patients?' : '١٧. هل تنصح بإعطاء وحدة الدم المتبرع بها للمرضى؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="recommendDonatedBlood" [value]="true" [(ngModel)]="recommendDonatedBlood" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="recommendDonatedBlood" [value]="false" [(ngModel)]="recommendDonatedBlood" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Q18 -->
+                    <div class="p-3.5 bg-white border border-slate-150 rounded-2xl">
+                      <div class="text-xs text-slate-700 font-bold mb-2.5">
+                        {{ lang.currentLang() === 'en' ? '18. Did you receive the educational information regarding blood donation?' : '١٨. هل حصلت على المعلومات التثقيفية الخاصة بالتبرع بالدم؟' }}
+                      </div>
+                      <div class="flex gap-4">
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="receivedEducationalInfo" [value]="true" [(ngModel)]="receivedEducationalInfo" />
+                          {{ lang.currentLang() === 'en' ? 'Yes' : 'نعم' }}
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                          <input type="radio" name="receivedEducationalInfo" [value]="false" [(ngModel)]="receivedEducationalInfo" />
+                          {{ lang.currentLang() === 'en' ? 'No' : 'لا' }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Consents -->
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                      <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer font-semibold leading-relaxed">
+                        <input type="checkbox" [(ngModel)]="consentBloodDraw" class="mt-0.5 accent-brand-red shrink-0" />
+                        <div class="flex flex-col">
+                          <span>
+                            {{ lang.currentLang() === 'en' 
+                                ? 'I have no objection to the blood bank drawing a unit of blood from me and performing necessary tests.' 
+                                : 'لا أمانع لبنك الدم بسحب وحدة دم مني وعمل الفحوصات اللازمة عليها وإجراء ما يلزم' }}
+                          </span>
+                        </div>
+                      </label>
+
+                      <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer font-semibold leading-relaxed">
+                        <input type="checkbox" [(ngModel)]="consentDeclaration" class="mt-0.5 accent-brand-red shrink-0" />
+                        <div class="flex flex-col">
+                          <span>
+                            {{ lang.currentLang() === 'en' 
+                                ? 'I declare that the information I have provided is correct.' 
+                                : 'أصرح بأن المعلومات التي أعطيتها صحيحة' }}
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+
+                  </div>
+
+                  @if (bookingError()) {
+                    <p class="text-xs text-red-500 font-semibold mb-2">{{ bookingError() }}</p>
+                  }
+
+                  <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+                    <button (click)="prevStep()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-all">
+                      ← {{ lang.currentLang() === 'en' ? 'Back' : 'الرجوع' }}
+                    </button>
+                    <button (click)="submitBooking()" [disabled]="bookingLoading() || !consentBloodDraw || !consentDeclaration"
+                      class="px-5 py-2.5 bg-brand-red hover:bg-brand-red-dark text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center gap-1.5">
+                      @if (bookingLoading()) {
+                        <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{{ lang.currentLang() === 'en' ? 'Booking...' : 'جاري الحجز...' }}</span>
+                      } @else {
+                        <span>{{ lang.t('confirmBooking') }}</span>
+                      }
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           }
         </div>
       </div>
     }
+        
   </div>
 </div>

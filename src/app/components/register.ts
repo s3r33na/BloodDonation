@@ -22,6 +22,7 @@ export class Register implements OnInit {
   nationalId = '';
   mobileNumber = '';
   dateOfBirth = '';
+  bloodType = 'A+';
   gender = 'Male';
   email = '';
   password = '';
@@ -47,7 +48,7 @@ export class Register implements OnInit {
 
   onSubmit() {
     // Client-side validations
-    if (!this.fullName || !this.mobileNumber || !this.dateOfBirth || !this.email || !this.password) {
+    if (!this.fullName || !this.mobileNumber || !this.dateOfBirth || !this.email || !this.password || !this.bloodType) {
       this.errorMsg.set('Please fill in all required fields.');
       return;
     }
@@ -74,6 +75,7 @@ export class Register implements OnInit {
       nationalId: this.nationality === 'Jordanian' ? this.nationalId : 'N/A',
       mobileNumber: this.mobileNumber,
       dateOfBirth: this.dateOfBirth,
+      bloodType: this.bloodType,
       gender: this.gender,
       email: this.email,
       password: this.password

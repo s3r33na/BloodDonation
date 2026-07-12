@@ -8,6 +8,9 @@ namespace BloodDonation.API.Models
         public int UserId { get; set; }
         public User? User { get; set; }
         
+        public int? AppointmentId { get; set; }
+        public Appointment? Appointment { get; set; }
+        
         public DateTime SubmissionDate { get; set; } = DateTime.UtcNow;
         
         // Medical parameters

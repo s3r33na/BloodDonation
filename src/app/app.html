@@ -42,10 +42,6 @@
                 class="px-3.5 py-2 rounded-xl transition-all hover:text-brand-red">
                 {{ lang.t('feed') }}
               </a>
-              <a routerLink="/screening" routerLinkActive="text-brand-red bg-red-50/60"
-                class="px-3.5 py-2 rounded-xl transition-all hover:text-brand-red">
-                {{ lang.t('screening') }}
-              </a>
             }
           </nav>
         </div>
@@ -130,7 +126,6 @@
       } @else {
         <a routerLink="/dashboard" routerLinkActive="text-brand-red">{{ lang.t('dashboard') }}</a>
         <a routerLink="/feed" routerLinkActive="text-brand-red">{{ lang.t('feed') }}</a>
-        <a routerLink="/screening" routerLinkActive="text-brand-red">{{ lang.t('screening') }}</a>
       }
     </div>
   </header>

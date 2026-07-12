@@ -86,6 +86,7 @@ namespace BloodDonation.API.Controllers
                 Email = dto.Email,
                 PasswordHash = SecurityHelper.HashPassword(dto.Password),
                 DateOfBirth = dto.DateOfBirth,
+                BloodType = dto.BloodType,
                 Gender = dto.Gender,
                 Nationality = dto.Nationality,
                 Role = "User", // Default registered users are donors
@@ -141,7 +142,11 @@ namespace BloodDonation.API.Controllers
                     user.Role,
                     user.EligibilityStatus,
                     user.NationalId,
-                    user.Nationality
+                    user.Nationality,
+                    user.MobileNumber,
+                    user.DateOfBirth,
+                    user.BloodType,
+                    user.Gender
                 }
             });
         }
@@ -168,6 +173,7 @@ namespace BloodDonation.API.Controllers
                 user.Nationality,
                 user.MobileNumber,
                 user.DateOfBirth,
+                user.BloodType,
                 user.Gender
             });
         }
@@ -181,6 +187,7 @@ namespace BloodDonation.API.Controllers
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string DateOfBirth { get; set; } = string.Empty;
+        public string BloodType { get; set; } = string.Empty;
         public string Gender { get; set; } = string.Empty;
         public string Nationality { get; set; } = string.Empty;
     }

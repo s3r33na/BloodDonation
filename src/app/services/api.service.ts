@@ -12,6 +12,7 @@ export interface User {
   nationality: string;
   mobileNumber?: string;
   dateOfBirth?: string;
+  bloodType?: string;
   gender?: string;
 }
 
@@ -159,8 +160,8 @@ export class ApiService {
   }
 
   // Appointment APIs
-  bookAppointment(postId: number, dateTime: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Appointment/book`, { postId, appointmentDateTime: dateTime }, { headers: this.getHeaders() }).pipe(
+  bookAppointment(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Appointment/book`, payload, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }

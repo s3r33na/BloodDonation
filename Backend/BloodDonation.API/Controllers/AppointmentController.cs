@@ -7,6 +7,8 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Collections.Generic;
 
 namespace BloodDonation.API.Controllers
 {
@@ -32,10 +34,17 @@ namespace BloodDonation.API.Controllers
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound(new { Message = "User not found." });
 
-            // Constraint: 1 & 3: Must complete registration and screening, ineligible users blocked
-            if (user.EligibilityStatus != "Eligible" && user.EligibilityStatus != "PendingReview")
+            // Constraint: 1 & 3: Ineligible users blocked from booking
+            if (user.EligibilityStatus == "PermanentlyNotEligible" || user.EligibilityStatus == "TemporarilyNotEligible")
             {
-                return BadRequest(new { Message = $"Booking restricted. Your current eligibility status is: {user.EligibilityStatus}. Please complete or review your screening form." });
+                if (user.EligibilityExpiryDate.HasValue && user.EligibilityExpiryDate.Value > DateTime.UtcNow)
+                {
+                    return BadRequest(new { Message = $"Booking restricted. Your eligibility suspension is active until {user.EligibilityExpiryDate.Value.ToLocalTime():yyyy-MM-dd} due to previous screening checks." });
+                }
+                else if (user.EligibilityStatus == "PermanentlyNotEligible")
+                {
+                    return BadRequest(new { Message = "Booking restricted. You are permanently deferred from donating blood under regulatory rules." });
+                }
             }
 
             // Check if user already has an active booking for this event
@@ -67,8 +76,145 @@ namespace BloodDonation.API.Controllers
                 return BadRequest(new { Message = $"Appointment time cannot be after the event ends ({post.EndDateTime.Value.ToLocalTime():yyyy-MM-dd HH:mm})." });
             }
 
-            // Generate QR Token
-            string qrToken = $"BDMS-{Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper()}-{userId}-{post.Id}";
+            // Validate Screening questionnaire answers
+            if (dto.Screening == null)
+            {
+                return BadRequest(new { Message = "Screening questionnaire answers are required to book an appointment." });
+            }
+
+            // 1. Consent Validation
+            if (!dto.Screening.ConsentBloodDraw || !dto.Screening.ConsentDeclaration)
+            {
+                return BadRequest(new { Message = "Consent to blood draw and truthfulness declaration are mandatory to complete booking." });
+            }
+
+            // 2. Eligibility evaluation
+            bool isEligible = true;
+            List<string> reasons = new();
+
+            if (!dto.Screening.FeelGoodHealth)
+            {
+                isEligible = false;
+                reasons.Add("Not feeling in good health currently.");
+            }
+            if (dto.Screening.BeenRejected)
+            {
+                isEligible = false;
+                reasons.Add("Has history of being rejected as a donor.");
+            }
+            if (dto.Screening.HadJaundiceOrHepatitis)
+            {
+                isEligible = false;
+                reasons.Add("Has history of jaundice or hepatitis (Permanent deferral).");
+            }
+            if (dto.Screening.HadMalaria)
+            {
+                isEligible = false;
+                reasons.Add("Has history of malaria.");
+            }
+            if (dto.Screening.HadBrucellosisOrTyphoid)
+            {
+                isEligible = false;
+                reasons.Add("Has history of brucellosis or typhoid fever.");
+            }
+            if (dto.Screening.SideEffectsPrevious)
+            {
+                isEligible = false;
+                reasons.Add("Experienced side effects after previous donation.");
+            }
+            if (dto.Screening.TraveledLast6Months)
+            {
+                isEligible = false;
+                reasons.Add("Traveled outside Jordan in the last six months.");
+            }
+            if (dto.Screening.ChronicDiseases != null && dto.Screening.ChronicDiseases.Count > 0)
+            {
+                isEligible = false;
+                reasons.Add($"Suffer from chronic disease: {string.Join(", ", dto.Screening.ChronicDiseases)}.");
+            }
+            if (dto.Screening.TakingMedicationsOrInjections)
+            {
+                isEligible = false;
+                reasons.Add("Currently taking medications or medications via injection.");
+            }
+            if (dto.Screening.FaintingSpellsSeizures)
+            {
+                isEligible = false;
+                reasons.Add("Suffers from fainting spells or seizures.");
+            }
+            if (dto.Screening.SevereAllergies)
+            {
+                isEligible = false;
+                reasons.Add("Suffers from severe allergies.");
+            }
+            if (dto.Screening.ReceivedVaccine14Days)
+            {
+                isEligible = false;
+                reasons.Add("Received a vaccine in the past 14 days.");
+            }
+            if (dto.Screening.TattooOrCupping12Months)
+            {
+                isEligible = false;
+                reasons.Add("Had a tattoo or cupping in the past 12 months.");
+            }
+            if (dto.Screening.SurgeryOrTransfusion12Months)
+            {
+                isEligible = false;
+                reasons.Add("Had surgery or received a blood transfusion in the past 12 months.");
+            }
+            if (dto.Screening.DentistLastWeek)
+            {
+                isEligible = false;
+                reasons.Add("Visited a dentist in the past week.");
+            }
+            if (user.Gender.Equals("Female", StringComparison.OrdinalIgnoreCase) && 
+                dto.Screening.FemalePregnancyStatus != null && 
+                dto.Screening.FemalePregnancyStatus.Count > 0)
+            {
+                isEligible = false;
+                reasons.Add($"Female specific deferral conditions met: {string.Join(", ", dto.Screening.FemalePregnancyStatus)}.");
+            }
+            if (!dto.Screening.RecommendDonatedBlood)
+            {
+                isEligible = false;
+                reasons.Add("Did not recommend giving the blood unit to patients.");
+            }
+            if (!dto.Screening.ReceivedEducationalInfo)
+            {
+                isEligible = false;
+                reasons.Add("Did not receive educational info regarding blood donation.");
+            }
+
+            // Update user status
+            if (!isEligible)
+            {
+                bool isPermanent = dto.Screening.HadJaundiceOrHepatitis || 
+                                   dto.Screening.HadMalaria || 
+                                   (dto.Screening.ChronicDiseases != null && 
+                                    (dto.Screening.ChronicDiseases.Contains("Heart") || 
+                                     dto.Screening.ChronicDiseases.Contains("Kidneys") || 
+                                     dto.Screening.ChronicDiseases.Contains("Lungs")));
+
+                user.EligibilityStatus = isPermanent ? "PermanentlyNotEligible" : "TemporarilyNotEligible";
+                user.EligibilityExpiryDate = isPermanent ? null : DateTime.UtcNow.AddMonths(3); // 3 months suspension
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                return BadRequest(new { Message = $"Booking denied. Medical screening ineligibility: {string.Join(" ", reasons)}" });
+            }
+            else
+            {
+                user.EligibilityStatus = "Eligible";
+                user.EligibilityExpiryDate = null;
+                _context.Users.Update(user);
+            }
+
+            // Generate a unique 6-digit QR Token
+            string qrToken;
+            do
+            {
+                qrToken = Random.Shared.Next(100000, 999999).ToString();
+            } while (await _context.Appointments.AnyAsync(a => a.QrCodeToken == qrToken));
 
             var appointment = new Appointment
             {
@@ -82,6 +228,55 @@ namespace BloodDonation.API.Controllers
 
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
+
+            // Calculate age
+            int age = 0;
+            if (DateTime.TryParse(user.DateOfBirth, out var dob))
+            {
+                age = DateTime.UtcNow.Year - dob.Year;
+                if (dob.Date > DateTime.UtcNow.AddYears(-age)) age--;
+            }
+
+            // Split user.BloodType into BloodGroup and RhFactor
+            string bloodGroup = "Unknown";
+            string rhFactor = "";
+            if (!string.IsNullOrEmpty(user.BloodType))
+            {
+                if (user.BloodType.EndsWith("+") || user.BloodType.EndsWith("-"))
+                {
+                    bloodGroup = user.BloodType.Substring(0, user.BloodType.Length - 1);
+                    rhFactor = user.BloodType.Substring(user.BloodType.Length - 1);
+                }
+                else
+                {
+                    bloodGroup = user.BloodType;
+                }
+            }
+
+            // Save DonationForm (Screening record) linked to this Appointment
+            var form = new DonationForm
+            {
+                UserId = userId,
+                AppointmentId = appointment.Id,
+                SubmissionDate = DateTime.UtcNow,
+                Age = age,
+                Weight = 70.0, // Default baseline weight, vitals to be adjusted by staff
+                BloodGroup = bloodGroup,
+                RhFactor = rhFactor,
+                Hemoglobin = 0,
+                Hematocrit = 0,
+                Address = "الأردن",
+                MedicalConditions = dto.Screening.ChronicDiseases != null && dto.Screening.ChronicDiseases.Count > 0 ? string.Join(", ", dto.Screening.ChronicDiseases) : "None",
+                Medications = dto.Screening.TakingMedicationsOrInjections ? "Yes" : "None",
+                RecentIllness = dto.Screening.FeelGoodHealth ? "None" : "Not feeling well",
+                SurgeryHistory = dto.Screening.SurgeryOrTransfusion12Months ? "Surgery in past 12 months" : "None",
+                PregnancyStatus = user.Gender.Equals("Female", StringComparison.OrdinalIgnoreCase) && dto.Screening.FemalePregnancyStatus != null && dto.Screening.FemalePregnancyStatus.Count > 0 ? string.Join(", ", dto.Screening.FemalePregnancyStatus) : "None",
+                EligibilityQuestionsJson = JsonSerializer.Serialize(dto.Screening),
+                EligibilityResult = "Eligible",
+                AdminNotes = "Approved via booking questionnaire. Vitals check required at center."
+            };
+
+            _context.DonationForms.Add(form);
 
             // Create notification for user
             _context.Notifications.Add(new Notification
@@ -380,10 +575,35 @@ namespace BloodDonation.API.Controllers
         }
     }
 
+    public class ScreeningDto
+    {
+        public bool FeelGoodHealth { get; set; }
+        public bool BeenRejected { get; set; }
+        public bool HadJaundiceOrHepatitis { get; set; }
+        public bool HadMalaria { get; set; }
+        public bool HadBrucellosisOrTyphoid { get; set; }
+        public bool SideEffectsPrevious { get; set; }
+        public bool TraveledLast6Months { get; set; }
+        public List<string> ChronicDiseases { get; set; } = new();
+        public bool TakingMedicationsOrInjections { get; set; }
+        public bool FaintingSpellsSeizures { get; set; }
+        public bool SevereAllergies { get; set; }
+        public bool ReceivedVaccine14Days { get; set; }
+        public bool TattooOrCupping12Months { get; set; }
+        public bool SurgeryOrTransfusion12Months { get; set; }
+        public bool DentistLastWeek { get; set; }
+        public List<string> FemalePregnancyStatus { get; set; } = new();
+        public bool ConsentBloodDraw { get; set; }
+        public bool ConsentDeclaration { get; set; }
+        public bool RecommendDonatedBlood { get; set; }
+        public bool ReceivedEducationalInfo { get; set; }
+    }
+
     public class BookAppointmentDto
     {
         public int PostId { get; set; }
         public DateTime AppointmentDateTime { get; set; }
+        public ScreeningDto Screening { get; set; } = null!;
     }
 
     public class CheckInDto
