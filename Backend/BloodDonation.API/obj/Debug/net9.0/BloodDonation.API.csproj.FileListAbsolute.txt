@@ -332,3 +332,4 @@ C:\Users\hazee\Downloads\sereen\BloodDonation\Backend\BloodDonation.API\obj\Debu
 C:\Users\hazee\Downloads\sereen\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\BloodDonation.API.pdb
 C:\Users\hazee\Downloads\sereen\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\BloodDonation.API.genruntimeconfig.cache
 C:\Users\hazee\Downloads\sereen\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\ref\BloodDonation.API.dll
+C:\Users\hazee\Downloads\sereen\BloodDonation\Backend\BloodDonation.API\obj\Debug\net9.0\swae.build.ex.cache
