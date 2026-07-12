@@ -2865,24 +2865,31 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\hazee\\.nuget\\packages\\": {}
+    "C:\\Users\\HT\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\hazee\\Downloads\\sereen\\BloodDonation\\Backend\\BloodDonation.API\\BloodDonation.API.csproj",
+      "projectUniqueName": "C:\\Users\\HT\\Desktop\\BloodDonation\\Backend\\BloodDonation.API\\BloodDonation.API.csproj",
       "projectName": "BloodDonation.API",
-      "projectPath": "C:\\Users\\hazee\\Downloads\\sereen\\BloodDonation\\Backend\\BloodDonation.API\\BloodDonation.API.csproj",
-      "packagesPath": "C:\\Users\\hazee\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\hazee\\Downloads\\sereen\\BloodDonation\\Backend\\BloodDonation.API\\obj\\",
+      "projectPath": "C:\\Users\\HT\\Desktop\\BloodDonation\\Backend\\BloodDonation.API\\BloodDonation.API.csproj",
+      "packagesPath": "C:\\Users\\HT\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\HT\\Desktop\\BloodDonation\\Backend\\BloodDonation.API\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\hazee\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\HT\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
