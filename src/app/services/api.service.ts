@@ -268,6 +268,26 @@ export class ApiService {
     );
   }
 
+  exportEventAnalysis(eventId: number, format: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/Report/export/event-analysis/${eventId}`, {
+      headers: this.getHeaders(),
+      params: { format },
+      responseType: 'blob'
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  exportEventAttendeeDetails(eventId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/Report/export/event-attendees/${eventId}`, {
+      headers: this.getHeaders(),
+      params: { format: 'excel' },
+      responseType: 'blob'
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(error: any) {
     let message = 'An unknown error occurred.';
     if (error.error && error.error.message) {

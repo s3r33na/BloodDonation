@@ -220,8 +220,8 @@ namespace BloodDonation.API.Controllers
             return Encoding.UTF8.GetBytes(sb.ToString());
         }
 
-        [HttpGet("export/event/{eventId}")]
-        public async Task<IActionResult> ExportEventData(int eventId, [FromQuery] string format)
+        [HttpGet("export/event-analysis/{eventId}")]
+        public async Task<IActionResult> ExportEventAnalysis(int eventId, [FromQuery] string format)
         {
             if (string.IsNullOrEmpty(format))
             {
@@ -231,51 +231,183 @@ namespace BloodDonation.API.Controllers
             var post = await _context.Posts.FindAsync(eventId);
             if (post == null) return NotFound(new { Message = "Post/Event not found." });
 
-            var appts = await _context.Appointments
+            var appointments = await _context.Appointments
                 .Include(a => a.User)
                 .Where(a => a.PostId == eventId)
                 .ToListAsync();
 
-            string title = $"Event Bookings Report - {post.Title}";
-            string[] headers = new[] { "Appt ID", "Donor Name", "National ID", "Email", "Phone", "Slot Time", "Status", "Blood Group" };
+            int totalBookings = appointments.Count;
+            int bookedCount = appointments.Count(a => a.Status == "Booked");
+            int checkedInCount = appointments.Count(a => a.Status == "CheckedIn");
+            int completedCount = appointments.Count(a => a.Status == "Completed");
+            int canceledCount = appointments.Count(a => a.Status == "Canceled");
+            int noShowCount = appointments.Count(a => a.Status == "NoShow");
+            int activeBookings = totalBookings - canceledCount;
+            double attendanceRate = activeBookings > 0
+                ? Math.Round(((double)(checkedInCount + completedCount) / activeBookings) * 100, 1)
+                : 0;
+
+            var bloodTypeCounts = new Dictionary<string, int>();
+            int vitalsCheckNeededCount = 0;
+
+            foreach (var appt in appointments)
+            {
+                if (appt.User == null) continue;
+
+                var form = await _context.DonationForms
+                    .Where(f => f.UserId == appt.UserId)
+                    .OrderByDescending(f => f.SubmissionDate)
+                    .FirstOrDefaultAsync();
+
+                string bloodType = form != null ? $"{form.BloodGroup}{form.RhFactor}" : "Not screened";
+                bool vitalsCheck = form != null && form.Hemoglobin == 0 && form.Hematocrit == 0;
+
+                if (appt.Status != "Canceled")
+                {
+                    if (bloodTypeCounts.ContainsKey(bloodType))
+                        bloodTypeCounts[bloodType]++;
+                    else
+                        bloodTypeCounts[bloodType] = 1;
+
+                    if (vitalsCheck)
+                    {
+                        vitalsCheckNeededCount++;
+                    }
+                }
+            }
+
+            string title = $"Blood Donation Event Analysis - {post.Title}";
+            string[] headers = new[] { "Metric", "Value" };
+            var rows = new List<string[]>
+            {
+                new[] { "Event", post.Title },
+                new[] { "Location", post.Location },
+                new[] { "Start", post.StartDateTime?.ToString("yyyy-MM-dd HH:mm") ?? "N/A" },
+                new[] { "End", post.EndDateTime?.ToString("yyyy-MM-dd HH:mm") ?? "N/A" },
+                new[] { "Total Bookings", totalBookings.ToString() },
+                new[] { "Booked", bookedCount.ToString() },
+                new[] { "Checked In", checkedInCount.ToString() },
+                new[] { "Completed", completedCount.ToString() },
+                new[] { "Canceled", canceledCount.ToString() },
+                new[] { "No Show", noShowCount.ToString() },
+                new[] { "Attendance Rate", $"{attendanceRate}%" },
+                new[] { "Vitals Review Needed", vitalsCheckNeededCount.ToString() }
+            };
+
+            if (bloodTypeCounts.Any())
+            {
+                foreach (var item in bloodTypeCounts.OrderBy(k => k.Key))
+                {
+                    rows.Add(new[] { $"Blood Type - {item.Key}", item.Value.ToString() });
+                }
+            }
+            else
+            {
+                rows.Add(new[] { "Blood Type Distribution", "No screening data" });
+            }
+
+            if (format.Equals("csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var csvBytes = GenerateCsv(headers, rows);
+                return File(csvBytes, "text/csv", $"event_analysis_{eventId}_{DateTime.Now:yyyyMMdd}.csv");
+            }
+            else if (format.Equals("excel", StringComparison.OrdinalIgnoreCase))
+            {
+                var excelBytes = GenerateExcelHtml(title, headers, rows);
+                return File(excelBytes, "application/vnd.ms-excel", $"event_analysis_{eventId}_{DateTime.Now:yyyyMMdd}.xls");
+            }
+            else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                var pdfBytes = PdfGenerator.GenerateTablePdf(title, headers, rows);
+                return File(pdfBytes, "application/pdf", $"event_analysis_{eventId}_{DateTime.Now:yyyyMMdd}.pdf");
+            }
+
+            return BadRequest("Unsupported export format.");
+        }
+
+        [HttpGet("export/event-attendees/{eventId}")]
+        public async Task<IActionResult> ExportEventAttendeeDetails(int eventId, [FromQuery] string format)
+        {
+            if (!string.Equals(format, "excel", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Only Excel export is supported for attendee detail sheets.");
+            }
+
+            var post = await _context.Posts.FindAsync(eventId);
+            if (post == null) return NotFound(new { Message = "Post/Event not found." });
+
+            var appointments = await _context.Appointments
+                .Include(a => a.User)
+                .Where(a => a.PostId == eventId)
+                .OrderBy(a => a.AppointmentDateTime)
+                .ToListAsync();
+
+            string title = $"Attendee Details - {post.Title}";
+            string[] headers = new[]
+            {
+                "Appointment ID",
+                "Full Name",
+                "National ID",
+                "Email",
+                "Phone",
+                "DOB",
+                "Gender",
+                "Nationality",
+                "Eligibility",
+                "Blood Group",
+                "Rh",
+                "Age",
+                "Weight",
+                "Hemoglobin",
+                "Hematocrit",
+                "Address",
+                "Medical Conditions",
+                "Medications",
+                "Eligibility Result",
+                "Admin Notes",
+                "Appointment Time",
+                "Status",
+                "QR Token"
+            };
             var rows = new List<string[]>();
 
-            foreach (var a in appts)
+            foreach (var a in appointments)
             {
-                if (a.User == null) continue;
-
                 var form = await _context.DonationForms
                     .Where(f => f.UserId == a.UserId)
                     .OrderByDescending(f => f.SubmissionDate)
                     .FirstOrDefaultAsync();
 
-                string bloodGroup = form != null ? $"{form.BloodGroup}{form.RhFactor}" : "Not screened";
-
                 rows.Add(new[]
                 {
                     a.Id.ToString(),
-                    a.User.FullName,
-                    a.User.NationalId,
-                    a.User.Email,
-                    a.User.MobileNumber ?? "N/A",
+                    a.User?.FullName ?? "Unknown",
+                    a.User?.NationalId ?? "N/A",
+                    a.User?.Email ?? "N/A",
+                    a.User?.MobileNumber ?? "N/A",
+                    a.User?.DateOfBirth ?? "N/A",
+                    a.User?.Gender ?? "N/A",
+                    a.User?.Nationality ?? "N/A",
+                    a.User?.EligibilityStatus ?? "N/A",
+                    form?.BloodGroup ?? "N/A",
+                    form?.RhFactor ?? "N/A",
+                    form?.Age.ToString() ?? "N/A",
+                    form?.Weight.ToString("F1") ?? "N/A",
+                    form?.Hemoglobin.ToString("F1") ?? "N/A",
+                    form?.Hematocrit.ToString("F0") ?? "N/A",
+                    form?.Address ?? "N/A",
+                    form?.MedicalConditions ?? "N/A",
+                    form?.Medications ?? "N/A",
+                    form?.EligibilityResult ?? "N/A",
+                    form?.AdminNotes ?? "N/A",
                     a.AppointmentDateTime.ToString("yyyy-MM-dd HH:mm"),
                     a.Status,
-                    bloodGroup
+                    a.QrCodeToken ?? "N/A"
                 });
             }
 
-            if (format.Equals("excel", StringComparison.OrdinalIgnoreCase))
-            {
-                var excelBytes = GenerateExcelHtml(title, headers, rows);
-                return File(excelBytes, "application/vnd.ms-excel", $"event_{eventId}_bookings_{DateTime.Now:yyyyMMdd}.xls");
-            }
-            else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                var pdfBytes = PdfGenerator.GenerateTablePdf(title, headers, rows);
-                return File(pdfBytes, "application/pdf", $"event_{eventId}_bookings_{DateTime.Now:yyyyMMdd}.pdf");
-            }
-
-            return BadRequest("Unsupported export format.");
+            var excelBytes = GenerateExcelHtml(title, headers, rows);
+            return File(excelBytes, "application/vnd.ms-excel", $"event_attendees_{eventId}_{DateTime.Now:yyyyMMdd}.xls");
         }
     }
 }
