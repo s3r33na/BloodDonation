@@ -59,6 +59,14 @@
           <span>{{ lang.t('signIn') }}</span>
         }
       </button>
+
+      <button
+        type="button"
+        (click)="viewDemo()"
+        class="w-full mt-3 py-3 px-4 border border-brand-red/20 text-brand-red bg-white hover:bg-red-50 font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red"
+      >
+        {{ lang.currentLang() === 'en' ? 'View Demo' : 'عرض النسخة التجريبية' }}
+      </button>
     </form>
 
     <div class="mt-8 text-center border-t border-slate-100 pt-6">

@@ -7,7 +7,7 @@ import { ApiService } from './services/api.service';
 export const authGuard = () => {
   const api = inject(ApiService);
   const router = inject(Router);
-  if (api.token()) return true;
+  if (api.token() || api.isDemoMode()) return true;
   router.navigate(['/login']);
   return false;
 };

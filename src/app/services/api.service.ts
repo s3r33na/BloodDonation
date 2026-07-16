@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap, catchError, throwError, map } from 'rxjs';
+import { Observable, tap, catchError, throwError, of } from 'rxjs';
 
 export interface User {
   id: number;
@@ -28,8 +28,15 @@ export class ApiService {
   token = signal<string | null>(null);
   notifications = signal<any[]>([]);
   unreadNotificationsCount = signal<number>(0);
+  demoMode = signal(false);
 
   constructor() {
+    const savedDemoMode = localStorage.getItem('bdms_demo_mode') === 'true';
+    if (savedDemoMode) {
+      this.enterDemoMode();
+      return;
+    }
+
     // Restore session on bootstrap
     const savedToken = localStorage.getItem('bdms_token');
     const savedUser = localStorage.getItem('bdms_user');
@@ -72,11 +79,45 @@ export class ApiService {
     );
   }
 
+  isDemoMode() {
+    return this.demoMode();
+  }
+
+  enterDemoMode() {
+    const demoUser: User = {
+      id: 999,
+      fullName: 'Demo User',
+      email: 'demo@blooddonation.app',
+      role: 'Donor',
+      eligibilityStatus: 'Eligible',
+      nationalId: '000000000',
+      nationality: 'Demo',
+      mobileNumber: '+966500000000',
+      dateOfBirth: '1990-01-01',
+      bloodType: 'O+',
+      gender: 'Prefer not to say'
+    };
+
+    this.demoMode.set(true);
+    this.token.set('demo-token');
+    this.currentUser.set(demoUser);
+    this.notifications.set([
+      { id: 1, title: 'Welcome to the demo dashboard', message: 'This preview uses sample data so you can explore the UI without the backend.', isRead: false },
+      { id: 2, title: 'Demo appointment ready', message: 'You can review the booking layout and donation history cards.', isRead: true }
+    ]);
+    this.unreadNotificationsCount.set(1);
+    localStorage.setItem('bdms_demo_mode', 'true');
+    localStorage.setItem('bdms_token', 'demo-token');
+    localStorage.setItem('bdms_user', JSON.stringify(demoUser));
+  }
+
   logout() {
+    this.demoMode.set(false);
     this.token.set(null);
     this.currentUser.set(null);
     this.notifications.set([]);
     this.unreadNotificationsCount.set(0);
+    localStorage.removeItem('bdms_demo_mode');
     localStorage.removeItem('bdms_token');
     localStorage.removeItem('bdms_user');
   }
@@ -142,6 +183,25 @@ export class ApiService {
   }
 
   getDonationHistory(): Observable<any[]> {
+    if (this.isDemoMode()) {
+      return of([
+        {
+          id: 1,
+          bloodType: 'O+',
+          location: 'Riyadh Central Hospital',
+          eligibilityResult: 'Eligible',
+          checkedInAt: '2026-06-14T09:00:00'
+        },
+        {
+          id: 2,
+          bloodType: 'O+',
+          location: 'King Abdulaziz Center',
+          eligibilityResult: 'Eligible',
+          checkedInAt: '2025-12-08T10:30:00'
+        }
+      ]);
+    }
+
     return this.http.get<any[]>(`${this.apiUrl}/DonationForm/history`, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
@@ -167,12 +227,37 @@ export class ApiService {
   }
 
   getMyAppointments(): Observable<any[]> {
+    if (this.isDemoMode()) {
+      return of([
+        {
+          id: 101,
+          status: 'Booked',
+          eventName: 'Community Blood Drive',
+          eventLocation: 'Riyadh Central Hospital',
+          appointmentDateTime: '2026-07-22T09:00:00',
+          qrCodeToken: 'DEMO-QR-101'
+        },
+        {
+          id: 102,
+          status: 'CheckedIn',
+          eventName: 'Weekend Donation Camp',
+          eventLocation: 'King Abdulaziz Center',
+          appointmentDateTime: '2026-07-25T14:30:00',
+          qrCodeToken: 'DEMO-QR-102'
+        }
+      ]);
+    }
+
     return this.http.get<any[]>(`${this.apiUrl}/Appointment/mine`, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }
 
   cancelAppointment(id: number): Observable<any> {
+    if (this.isDemoMode()) {
+      return of({ success: true, id });
+    }
+
     return this.http.post(`${this.apiUrl}/Appointment/${id}/cancel`, {}, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
@@ -237,6 +322,16 @@ export class ApiService {
 
   // Notifications API
   fetchNotifications(): Observable<any[]> {
+    if (this.isDemoMode()) {
+      const demoNotifications = [
+        { id: 1, title: 'Welcome to the demo dashboard', message: 'This preview uses sample data so you can explore the UI without the backend.', isRead: false },
+        { id: 2, title: 'Demo appointment ready', message: 'You can review the booking layout and donation history cards.', isRead: true }
+      ];
+      this.notifications.set(demoNotifications);
+      this.unreadNotificationsCount.set(demoNotifications.filter(n => !n.isRead).length);
+      return of(demoNotifications);
+    }
+
     return this.http.get<any[]>(`${this.apiUrl}/Dashboard/notifications`, { headers: this.getHeaders() }).pipe(
       tap(notes => {
         this.notifications.set(notes);

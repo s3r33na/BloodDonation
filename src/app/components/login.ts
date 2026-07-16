@@ -56,4 +56,9 @@ export class Login implements OnInit {
       }
     });
   }
+
+  viewDemo() {
+    this.api.enterDemoMode();
+    this.router.navigate(['/dashboard']);
+  }
 }
