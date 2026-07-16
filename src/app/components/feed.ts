@@ -322,10 +322,8 @@ export class Feed implements OnInit {
     this.api.bookAppointment(payload).subscribe({
       next: () => {
         this.bookingLoading.set(false);
-        this.successMsg.set('Appointment booked successfully! Confirmation notification generated.');
         this.onCloseBooking();
         this.loadFeed(); // Reload capacity slots
-        window.scrollTo({ top: 0, behavior: 'smooth' });
         this.api.fetchNotifications().subscribe();
       },
       error: (err) => {

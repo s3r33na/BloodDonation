@@ -80,7 +80,12 @@ export class ApiService {
   }
 
   isDemoMode() {
-    return this.demoMode();
+    // Double-check localStorage in case signal got out of sync
+    const localStorageDemo = localStorage.getItem('bdms_demo_mode') === 'true';
+    if (localStorageDemo && !this.demoMode()) {
+      this.demoMode.set(true);
+    }
+    return this.demoMode() || localStorageDemo;
   }
 
   enterDemoMode() {
@@ -134,6 +139,62 @@ export class ApiService {
 
   // Feed/Post APIs
   getFeed(filters: { type?: string; bloodType?: string; search?: string } = {}): Observable<any[]> {
+    if (this.isDemoMode()) {
+      const demoPosts = [
+        {
+          id: 1,
+          title: 'Urgent Blood Drive in Amman',
+          content: 'We are looking for O+ and A+ donors for a community campaign this weekend. Please join us if you are eligible.',
+          type: 'Event',
+          bloodType: 'O+',
+          location: 'Amman, Jordan',
+          startDateTime: '2026-07-18T09:00:00',
+          endDateTime: '2026-07-18T15:00:00',
+          capacity: 40,
+          attendeesCount: 18,
+          createdBy: 'Jordan Red Crescent'
+        },
+        {
+          id: 2,
+          title: 'Mobile Donation Unit at Zarqa',
+          content: 'A mobile blood donation unit will be visiting Zarqa next week. Walk-ins are welcome.',
+          type: 'Request',
+          bloodType: 'A-',
+          location: 'Zarqa, Jordan',
+          startDateTime: '2026-07-21T10:00:00',
+          endDateTime: '2026-07-21T16:00:00',
+          capacity: 30,
+          attendeesCount: 12,
+          createdBy: 'National Blood Bank'
+        },
+        {
+          id: 3,
+          title: 'Volunteer Awareness Session',
+          content: 'Join our awareness session to learn about eligibility, donation safety, and post-donation care.',
+          type: 'Event',
+          bloodType: 'All',
+          location: 'Irbid, Jordan',
+          startDateTime: '2026-07-24T13:00:00',
+          endDateTime: '2026-07-24T15:00:00',
+          capacity: 25,
+          attendeesCount: 9,
+          createdBy: 'University Hospital Team'
+        }
+      ];
+
+      const filtered = demoPosts.filter(post => {
+        if (filters.type && post.type !== filters.type) return false;
+        if (filters.bloodType && filters.bloodType !== 'All' && post.bloodType !== filters.bloodType) return false;
+        if (filters.search) {
+          const query = filters.search.toLowerCase();
+          return post.title.toLowerCase().includes(query) || post.content.toLowerCase().includes(query) || post.location.toLowerCase().includes(query);
+        }
+        return true;
+      });
+
+      return of(filtered);
+    }
+
     let params: any = {};
     if (filters.type) params.type = filters.type;
     if (filters.bloodType) params.bloodType = filters.bloodType;
@@ -176,6 +237,14 @@ export class ApiService {
 
   // Donation Form APIs
   submitScreeningForm(formData: any): Observable<any> {
+    const signalDemo = this.demoMode();
+    const storageDemo = localStorage.getItem('bdms_demo_mode') === 'true';
+
+    if (signalDemo || storageDemo) {
+      console.log('📱 DEMO MODE: Screening form submitted');
+      return of({ success: true });
+    }
+
     return this.http.post(`${this.apiUrl}/DonationForm/submit`, formData, { headers: this.getHeaders() }).pipe(
       tap(() => this.getProfile().subscribe()), // update local profile status
       catchError(this.handleError)
@@ -188,14 +257,18 @@ export class ApiService {
         {
           id: 1,
           bloodType: 'O+',
-          location: 'Riyadh Central Hospital',
+          bloodGroup: 'O',
+          rhFactor: '+',
+          location: 'Jordan University Hospital, Amman',
           eligibilityResult: 'Eligible',
           checkedInAt: '2026-06-14T09:00:00'
         },
         {
           id: 2,
-          bloodType: 'O+',
-          location: 'King Abdulaziz Center',
+          bloodType: 'A+',
+          bloodGroup: 'A',
+          rhFactor: '+',
+          location: 'King Abdullah University Hospital, Irbid',
           eligibilityResult: 'Eligible',
           checkedInAt: '2025-12-08T10:30:00'
         }
@@ -219,8 +292,17 @@ export class ApiService {
     );
   }
 
-  // Appointment APIs
   bookAppointment(payload: any): Observable<any> {
+    const signalDemo = this.demoMode();
+    const storageDemo = localStorage.getItem('bdms_demo_mode') === 'true';
+    
+    // Return demo response if in demo mode (check both signal and storage)
+    if (signalDemo || storageDemo) {
+      console.log('📱 DEMO MODE: Booking appointment');
+      return of({ success: true, id: Math.floor(Math.random() * 10000) });
+    }
+
+    // Only make HTTP call if definitely NOT in demo mode
     return this.http.post(`${this.apiUrl}/Appointment/book`, payload, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
@@ -233,7 +315,7 @@ export class ApiService {
           id: 101,
           status: 'Booked',
           eventName: 'Community Blood Drive',
-          eventLocation: 'Riyadh Central Hospital',
+          eventLocation: 'Amman, Jordan',
           appointmentDateTime: '2026-07-22T09:00:00',
           qrCodeToken: 'DEMO-QR-101'
         },
@@ -241,7 +323,7 @@ export class ApiService {
           id: 102,
           status: 'CheckedIn',
           eventName: 'Weekend Donation Camp',
-          eventLocation: 'King Abdulaziz Center',
+          eventLocation: 'Zarqa, Jordan',
           appointmentDateTime: '2026-07-25T14:30:00',
           qrCodeToken: 'DEMO-QR-102'
         }
@@ -264,6 +346,50 @@ export class ApiService {
   }
 
   getAllAppointments(search?: string, status?: string): Observable<any[]> {
+    if (this.isDemoMode()) {
+      const appointments = [
+        {
+          id: 201,
+          status: 'Booked',
+          donorName: 'Ali Haddad',
+          donorNationalId: '998877665',
+          donorBloodType: 'O+',
+          eventName: 'Amman Community Blood Drive',
+          qrCodeToken: 'DEMO-QR-201',
+          createdAt: '2026-07-16T08:00:00',
+          checkedInAt: '2026-07-16T08:15:00'
+        },
+        {
+          id: 202,
+          status: 'CheckedIn',
+          donorName: 'Mona Nasser',
+          donorNationalId: '112233445',
+          donorBloodType: 'A+',
+          eventName: 'Zarqa Mobile Donation Unit',
+          qrCodeToken: 'DEMO-QR-202',
+          createdAt: '2026-07-16T08:30:00',
+          checkedInAt: '2026-07-16T08:45:00'
+        },
+        {
+          id: 203,
+          status: 'Completed',
+          donorName: 'Khaled Samir',
+          donorNationalId: '556677889',
+          donorBloodType: 'B+',
+          eventName: 'Irbid Awareness Session',
+          qrCodeToken: 'DEMO-QR-203',
+          createdAt: '2026-07-15T10:00:00',
+          checkedInAt: '2026-07-15T10:10:00'
+        }
+      ];
+
+      if (status) {
+        return of(appointments.filter(a => a.status === status));
+      }
+
+      return of(appointments);
+    }
+
     let params: any = {};
     if (search) params.search = search;
     if (status) params.status = status;
@@ -273,12 +399,25 @@ export class ApiService {
   }
 
   checkInAppointment(qrCodeToken: string): Observable<any> {
+    if (this.isDemoMode()) {
+      return of({
+        donorName: 'Demo Donor',
+        nationalId: '000000000',
+        bloodGroup: 'O+',
+        checkInTime: new Date().toISOString()
+      });
+    }
+
     return this.http.post(`${this.apiUrl}/Appointment/check-in`, { qrCodeToken }, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }
 
   updateAttendanceStatus(id: number, status: string, notes: string): Observable<any> {
+    if (this.isDemoMode()) {
+      return of({ success: true, id, status, notes });
+    }
+
     return this.http.post(`${this.apiUrl}/Appointment/${id}/attendance-status`, { status, notes }, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
@@ -292,12 +431,47 @@ export class ApiService {
 
   // Admin Dashboard Statistics APIs
   getDashboardStats(): Observable<any> {
+    if (this.isDemoMode()) {
+      return of({
+        totalRegisteredUsers: 184,
+        newSubmissions: 29,
+        totalAppointments: 72,
+        confirmedDonations: 41,
+        upcomingEvents: 3,
+        emergencyRequests: 2,
+        eventAttendees: 18,
+        bookedAppointments: 12,
+        completedAppointments: 24,
+        canceledAppointments: 6,
+        noShowAppointments: 3
+      });
+    }
+
     return this.http.get(`${this.apiUrl}/Dashboard/stats`, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }
 
   getDashboardCharts(): Observable<any> {
+    if (this.isDemoMode()) {
+      return of({
+        bloodAvailability: [
+          { bloodType: 'O+', count: 22 },
+          { bloodType: 'A+', count: 16 },
+          { bloodType: 'B+', count: 10 },
+          { bloodType: 'AB+', count: 4 }
+        ],
+        bloodDemand: [
+          { bloodType: 'O+', count: 14 },
+          { bloodType: 'A+', count: 9 },
+          { bloodType: 'B+', count: 6 },
+          { bloodType: 'AB+', count: 3 }
+        ],
+        attendanceRate: 82,
+        noShowRate: 8
+      });
+    }
+
     return this.http.get(`${this.apiUrl}/Dashboard/charts`, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );

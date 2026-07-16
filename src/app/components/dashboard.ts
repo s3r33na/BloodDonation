@@ -63,15 +63,25 @@ export class Dashboard implements OnInit {
     this.historyLoading.set(true);
     this.api.getDonationHistory().subscribe({
       next: (data) => {
-        this.donationHistory.set(data);
-        if (data.length > 0) {
-          const latest = data[0];
-          this.bloodType.set(`${latest.bloodGroup}${latest.rhFactor}`);
-          this.completedDonationsCount.set(data.filter(x => x.eligibilityResult === 'Eligible').length);
+        const history = Array.isArray(data) ? data : [];
+        this.donationHistory.set(history);
+        if (history.length > 0) {
+          const latest = history[0];
+          const bloodGroup = latest?.bloodGroup || latest?.bloodType?.[0] || 'O';
+          const rhFactor = latest?.rhFactor || (latest?.bloodType?.includes('-') ? '-' : '+');
+          this.bloodType.set(`${bloodGroup}${rhFactor}`);
+          this.completedDonationsCount.set(history.filter(x => x?.eligibilityResult === 'Eligible').length);
+        } else {
+          this.bloodType.set('Pending Screening');
+          this.completedDonationsCount.set(0);
         }
         this.historyLoading.set(false);
       },
-      error: () => this.historyLoading.set(false)
+      error: () => {
+        this.historyLoading.set(false);
+        this.bloodType.set('Pending Screening');
+        this.completedDonationsCount.set(0);
+      }
     });
   }
 
